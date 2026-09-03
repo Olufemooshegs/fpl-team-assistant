@@ -1,4 +1,5 @@
 import type { EnrichedPick, SquadData } from "../types"
+import { Jersey, Crest } from "./FplImages"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -95,62 +96,57 @@ function SectionDivider({ label, count }: { label: string; count: number }) {
   )
 }
 
+// ── Fixture badge — crest + colored short name ────────────────────────────────
+
+function FixtureBadge({
+  fixture,
+  crestSize = 12,
+  textSize = "text-[9px]",
+}: {
+  fixture: { opponentCode: number; opponentShortName: string; isHome: boolean; difficulty: number } | null
+  crestSize?: number
+  textSize?: string
+}) {
+  if (!fixture) return <span className={`${textSize} text-ink-3 italic`}>BGW</span>
+
+  const homeAway = fixture.isHome ? "(H)" : "(A)"
+  return (
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${diffClass(fixture.difficulty)}`}>
+      <Crest teamCode={fixture.opponentCode} shortName={fixture.opponentShortName} size={crestSize} />
+      <span className={`${textSize} font-semibold leading-none`}>
+        {fixture.opponentShortName} {homeAway}
+      </span>
+    </span>
+  )
+}
+
 // ── Pitch lines ───────────────────────────────────────────────────────────────
 
 function PitchLines() {
   const lineStyle = { borderColor: "var(--c-pitch-line)" } as React.CSSProperties
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Halfway line */}
-      <div
-        className="absolute top-1/2 left-8 right-8 h-px"
-        style={{ background: "var(--c-pitch-line)" }}
-      />
-      {/* Center circle */}
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full border"
-        style={lineStyle}
-      />
-      {/* Center dot */}
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
-        style={{ background: "var(--c-pitch-line)" }}
-      />
-      {/* Top penalty area */}
-      <div
-        className="absolute top-6 left-1/2 -translate-x-1/2 w-40 h-14 rounded-b-lg border border-t-0"
-        style={lineStyle}
-      />
-      {/* Bottom penalty area */}
-      <div
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 w-40 h-14 rounded-t-lg border border-b-0"
-        style={lineStyle}
-      />
+      <div className="absolute top-1/2 left-8 right-8 h-px" style={{ background: "var(--c-pitch-line)" }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full border" style={lineStyle} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style={{ background: "var(--c-pitch-line)" }} />
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 w-40 h-14 rounded-b-lg border border-t-0" style={lineStyle} />
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-40 h-14 rounded-t-lg border border-b-0" style={lineStyle} />
     </div>
   )
 }
 
-// ── Pitch card (used in formation view on desktop) ────────────────────────────
+// ── Pitch card (desktop formation view) ───────────────────────────────────────
 
 function PitchCard({ ep }: { ep: EnrichedPick }) {
   const { pick, element, team, prediction, nextFixture } = ep
   const displayPts = prediction.predictedPoints * Math.max(pick.multiplier, 1)
   const stripColor = POSITION_COLOR[element.element_type] ?? "#94A3B8"
+  const isGK = element.element_type === 1
   const isCap = pick.is_captain
   const isVc = pick.is_vice_captain
 
   return (
     <div className="relative flex flex-col items-center w-24 sm:w-[100px]">
-      {/* C / VC badge */}
-      {(isCap || isVc) && (
-        <div
-          className={`absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full flex items-center justify-center z-10 text-[9px] font-bold text-white border border-white/30
-            ${isCap ? "bg-primary" : "bg-ink-2"}`}
-        >
-          {isCap ? "C" : "VC"}
-        </div>
-      )}
-
       <div
         className="w-full rounded-lg overflow-hidden"
         style={{ background: "var(--c-pitch-card)" }}
@@ -158,21 +154,38 @@ function PitchCard({ ep }: { ep: EnrichedPick }) {
         {/* Position color strip */}
         <div className="h-[3px] w-full" style={{ background: stripColor }} />
 
-        <div className="p-1.5 text-center">
+        <div className="p-2 flex flex-col items-center text-center gap-1">
+          {/* Jersey with C/VC overlay */}
+          <div className="relative">
+            <Jersey
+              teamCode={team.code}
+              teamShortName={team.short_name}
+              isGK={isGK}
+              size={52}
+            />
+            {(isCap || isVc) && (
+              <div
+                className={`absolute -top-1 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white border border-white/40 ${
+                  isCap ? "bg-primary" : "bg-ink-2"
+                }`}
+              >
+                {isCap ? "C" : "VC"}
+              </div>
+            )}
+          </div>
+
+          {/* Name */}
           <p
-            className="text-[11px] font-semibold truncate leading-tight"
+            className="text-[11px] font-semibold truncate w-full leading-tight"
             style={{ color: "var(--c-pitch-ink)" }}
             title={`${element.first_name} ${element.second_name}`}
           >
             {element.web_name}
           </p>
-          <p className="text-[9px] mt-0.5" style={{ color: "var(--c-pitch-muted)" }}>
-            {team.short_name}
-          </p>
 
           {/* Predicted pts */}
           <div
-            className="leading-none my-1"
+            className="leading-none"
             style={{
               fontFamily: "var(--font-rajdhani)",
               fontWeight: 700,
@@ -185,26 +198,13 @@ function PitchCard({ ep }: { ep: EnrichedPick }) {
 
           {/* Multiplier hint */}
           {pick.multiplier > 1 && (
-            <p className="text-[8px] -mt-0.5 mb-0.5" style={{ color: "var(--c-primary)" }}>
+            <p className="text-[8px] -mt-0.5" style={{ color: "var(--c-primary)" }}>
               {prediction.predictedPoints.toFixed(1)}&times;{pick.multiplier}
             </p>
           )}
 
-          {/* Next fixture */}
-          {nextFixture ? (
-            <span
-              className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded mt-0.5 ${diffClass(nextFixture.difficulty)}`}
-            >
-              {nextFixture.isHome ? "" : "@"}{nextFixture.opponentShortName}
-            </span>
-          ) : (
-            <span className="text-[9px] italic mt-0.5" style={{ color: "var(--c-pitch-muted)" }}>BGW</span>
-          )}
-
-          {/* Price */}
-          <p className="text-[9px] mt-1" style={{ color: "var(--c-pitch-muted)" }}>
-            £{(element.now_cost / 10).toFixed(1)}m
-          </p>
+          {/* Fixture */}
+          <FixtureBadge fixture={nextFixture} crestSize={12} textSize="text-[9px]" />
         </div>
       </div>
     </div>
@@ -216,7 +216,7 @@ function PitchCard({ ep }: { ep: EnrichedPick }) {
 function PitchRow({ picks }: { picks: EnrichedPick[] }) {
   if (picks.length === 0) return null
   return (
-    <div className="flex justify-center gap-2.5 sm:gap-3">
+    <div className="flex justify-center gap-2 sm:gap-2.5">
       {picks.map(ep => (
         <PitchCard key={ep.pick.element} ep={ep} />
       ))}
@@ -238,7 +238,7 @@ function PitchFormation({ startingXI }: { startingXI: EnrichedPick[] }) {
       style={{ background: "var(--c-pitch-gradient)" }}
     >
       <PitchLines />
-      <div className="relative z-10 flex flex-col gap-7 py-10 px-4">
+      <div className="relative z-10 flex flex-col gap-6 py-10 px-4">
         <PitchRow picks={fwd} />
         <PitchRow picks={mid} />
         <PitchRow picks={def} />
@@ -260,10 +260,7 @@ function ListCard({ ep }: { ep: EnrichedPick }) {
   return (
     <div className="flex items-center gap-3 bg-surface border border-line rounded-xl p-3 min-h-[56px]">
       {/* Position color strip */}
-      <div
-        className="w-1 self-stretch rounded-full shrink-0"
-        style={{ background: stripColor }}
-      />
+      <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: stripColor }} />
 
       {/* Player info */}
       <div className="flex-1 min-w-0">
@@ -280,16 +277,20 @@ function ListCard({ ep }: { ep: EnrichedPick }) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+
+        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          {/* Own team */}
+          <Crest teamCode={team.code} shortName={team.short_name} size={14} />
           <span className="text-ink-3 text-xs">{team.short_name}</span>
           <span className="text-ink-3 text-xs">&bull;</span>
           <span className="text-ink-3 text-xs">£{(element.now_cost / 10).toFixed(1)}m</span>
+
+          {/* Fixture */}
           {nextFixture && (
             <>
               <span className="text-ink-3 text-xs">&bull;</span>
-              <span
-                className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${diffClass(nextFixture.difficulty)}`}
-              >
+              <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded ${diffClass(nextFixture.difficulty)}`}>
+                <Crest teamCode={nextFixture.opponentCode} shortName={nextFixture.opponentShortName} size={12} />
                 {nextFixture.isHome ? "" : "@"}{nextFixture.opponentShortName}
               </span>
             </>
@@ -311,9 +312,7 @@ function ListCard({ ep }: { ep: EnrichedPick }) {
           </div>
         )}
         {prediction.epNext !== null && (
-          <div className="text-ink-3 text-[10px] mt-0.5">
-            FPL {prediction.epNext.toFixed(1)}
-          </div>
+          <div className="text-ink-3 text-[10px] mt-0.5">FPL {prediction.epNext.toFixed(1)}</div>
         )}
       </div>
     </div>
@@ -359,37 +358,59 @@ function BenchCard({ ep }: { ep: EnrichedPick }) {
   const { pick, element, team, prediction, nextFixture } = ep
   const pos = POS_META[element.element_type as ElemType]
   const stripColor = POSITION_COLOR[element.element_type] ?? "#94A3B8"
+  const isGK = element.element_type === 1
 
   return (
     <div className="flex-shrink-0 w-24 flex flex-col items-center opacity-70">
       <div className="w-full rounded-lg overflow-hidden bg-surface-2 border border-line">
         <div className="h-[3px] w-full" style={{ background: stripColor }} />
-        <div className="p-1.5 text-center">
+        <div className="p-1.5 flex flex-col items-center text-center gap-1">
+          {/* Position pill */}
           {pos && (
-            <span className={`inline-block text-[8px] font-bold px-1 py-0.5 rounded mb-1 ${pos.textClass} ${pos.bgClass}`}>
+            <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${pos.textClass} ${pos.bgClass}`}>
               {pos.label}
             </span>
           )}
+
+          {/* Jersey */}
+          <Jersey
+            teamCode={team.code}
+            teamShortName={team.short_name}
+            isGK={isGK}
+            size={36}
+          />
+
+          {/* Name */}
           <p
-            className="text-ink text-[10px] font-semibold truncate leading-tight"
+            className="text-ink text-[10px] font-semibold truncate w-full leading-tight"
             title={`${element.first_name} ${element.second_name}`}
           >
             {element.web_name}
           </p>
-          <p className="text-ink-3 text-[9px] mt-0.5">{team.short_name}</p>
+
+          {/* Score */}
           <div
-            className="text-ink-2 leading-none my-1"
+            className="text-ink-2 leading-none"
             style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "18px" }}
           >
             {prediction.predictedPoints.toFixed(1)}
           </div>
+
+          {/* Fixture */}
           {nextFixture ? (
-            <span className={`inline-block text-[8px] font-semibold px-1 py-0.5 rounded ${diffClass(nextFixture.difficulty)}`}>
+            <span className={`inline-flex items-center gap-0.5 text-[8px] font-semibold px-1 py-0.5 rounded ${diffClass(nextFixture.difficulty)}`}>
+              <Crest teamCode={nextFixture.opponentCode} shortName={nextFixture.opponentShortName} size={10} />
               {nextFixture.isHome ? "" : "@"}{nextFixture.opponentShortName}
             </span>
           ) : (
             <span className="text-[8px] text-ink-3 italic">BGW</span>
           )}
+
+          {/* Own team crest */}
+          <div className="flex items-center gap-1 mt-0.5">
+            <Crest teamCode={team.code} shortName={team.short_name} size={12} />
+            <span className="text-ink-3 text-[9px]">{team.short_name}</span>
+          </div>
         </div>
       </div>
     </div>

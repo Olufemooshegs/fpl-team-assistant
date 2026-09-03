@@ -10,6 +10,7 @@ export interface FplEvent {
 
 export interface FplTeam {
   id: number
+  code: number
   name: string
   short_name: string
 }
@@ -120,6 +121,7 @@ export interface PlayerSummaryResponse {
 
 export interface FixtureInfo {
   opponentTeamId: number
+  opponentCode: number
   opponentShortName: string
   isHome: boolean
   difficulty: number

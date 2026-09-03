@@ -67,9 +67,11 @@ export function resolveFixtureInfo(
   const opponentId = isHome ? match.team_a : match.team_h
   const difficulty = isHome ? match.team_h_difficulty : match.team_a_difficulty
 
+  const opponent = teamsMap.get(opponentId)
   return {
     opponentTeamId: opponentId,
-    opponentShortName: teamsMap.get(opponentId)?.short_name ?? "???",
+    opponentCode: opponent?.code ?? 0,
+    opponentShortName: opponent?.short_name ?? "???",
     isHome,
     difficulty,
     event: nextEventId,
