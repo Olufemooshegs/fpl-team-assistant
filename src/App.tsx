@@ -1,11 +1,21 @@
 import { useState } from "react"
-import type { BootstrapResponse, TeamPicksResponse, ApiError } from "./types"
+import type {
+  BootstrapResponse,
+  FplFixture,
+  TeamPicksResponse,
+  PlayerSummaryResponse,
+  ApiError,
+  SquadData,
+  EnrichedPick,
+} from "./types"
+import { calculatePrediction, getNextEventId, resolveFixtureInfo } from "./services/prediction"
+import SquadView from "./components/SquadView"
 
-type LoadState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "success"; gameweek: number; teamData: TeamPicksResponse }
-  | { status: "error"; message: string }
+type AppPhase =
+  | { phase: "idle" }
+  | { phase: "loading"; message: string }
+  | { phase: "error"; message: string }
+  | { phase: "loaded"; squadData: SquadData }
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url)
@@ -21,9 +31,15 @@ function Header() {
     <header className="bg-fpl-purple border-b border-fpl-purple-light">
       <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-fpl-green flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-fpl-green flex items-center justify-center shrink-0">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8l3.5 3.5L13 4.5" stroke="#37003c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M3 8l3.5 3.5L13 4.5"
+                stroke="#37003c"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
           <span
@@ -71,7 +87,7 @@ function Hero() {
             expected points.
           </p>
           <div className="flex flex-wrap gap-6 text-sm text-text-muted">
-            {["Live FPL data", "Fixture difficulty", "xP projections"].map((f) => (
+            {["Live FPL data", "Fixture difficulty", "xP projections"].map(f => (
               <span key={f} className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-fpl-green" />
                 {f}
@@ -84,45 +100,40 @@ function Hero() {
   )
 }
 
-function TeamLoader({ onLoad }: { onLoad: (state: LoadState) => void }) {
-  const [teamId, setTeamId] = useState("")
-  const [localState, setLocalState] = useState<LoadState>({ status: "idle" })
+function LoadingCard({ message }: { message: string }) {
+  return (
+    <div className="max-w-5xl mx-auto px-6 pb-8">
+      <div className="flex items-center gap-4 p-5 bg-navy-card border border-navy-border rounded-2xl max-w-xl">
+        <div className="w-8 h-8 rounded-full border-2 border-fpl-green border-t-transparent animate-spin shrink-0" />
+        <div>
+          <p className="text-white text-sm font-medium">{message}</p>
+          <p className="text-text-muted text-xs mt-0.5">Hang tight...</p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-  async function handleSubmit(e: React.FormEvent) {
+function TeamLoader({
+  onSubmit,
+  isLoading,
+  errorMessage,
+}: {
+  onSubmit: (teamId: string) => void
+  isLoading: boolean
+  errorMessage: string | null
+}) {
+  const [teamId, setTeamId] = useState("")
+
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const id = teamId.trim()
-    if (!id || !/^\d+$/.test(id)) {
-      setLocalState({ status: "error", message: "Please enter a valid numeric FPL Team ID." })
-      return
-    }
-
-    setLocalState({ status: "loading" })
-    onLoad({ status: "loading" })
-
-    try {
-      const bootstrap = await fetchJson<BootstrapResponse>("/api/fpl/bootstrap")
-      const currentEvent = bootstrap.events.find((e) => e.is_current)
-      const gameweek = currentEvent?.id ?? bootstrap.events.findIndex((e) => !e.finished) + 1
-
-      const teamData = await fetchJson<TeamPicksResponse>(
-        `/api/fpl/team/${id}/${gameweek}`,
-      )
-
-      console.log("[FPL Team Assistant] Raw team data:", teamData)
-
-      const next: LoadState = { status: "success", gameweek, teamData }
-      setLocalState(next)
-      onLoad(next)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load team data."
-      const errState: LoadState = { status: "error", message }
-      setLocalState(errState)
-      onLoad(errState)
-    }
+    if (!id || !/^\d+$/.test(id)) return
+    onSubmit(id)
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 pb-16">
+    <div className="max-w-5xl mx-auto px-6 pb-8">
       <div className="bg-navy-card border border-navy-border rounded-2xl p-8 max-w-xl">
         <h2
           className="text-xl text-white mb-1"
@@ -132,32 +143,27 @@ function TeamLoader({ onLoad }: { onLoad: (state: LoadState) => void }) {
         </h2>
         <p className="text-text-muted text-sm mb-6">
           Find your Team ID at{" "}
-          <span className="text-fpl-green">Points → View gameweek history</span>{" "}
+          <span className="text-fpl-green">Points &rarr; View gameweek history</span>{" "}
           in the FPL app URL.
         </p>
 
         <form onSubmit={handleSubmit} className="flex gap-3">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="\d*"
-              value={teamId}
-              onChange={(e) => {
-                setTeamId(e.target.value)
-                if (localState.status === "error") setLocalState({ status: "idle" })
-              }}
-              placeholder="e.g. 1234567"
-              className="w-full bg-navy-elevated border border-navy-border rounded-xl px-4 py-3 text-white placeholder-text-muted focus:outline-none focus:border-fpl-green/60 focus:ring-1 focus:ring-fpl-green/30 transition-all text-sm"
-              disabled={localState.status === "loading"}
-            />
-          </div>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="\d*"
+            value={teamId}
+            onChange={e => setTeamId(e.target.value)}
+            placeholder="e.g. 1234567"
+            disabled={isLoading}
+            className="flex-1 bg-navy-elevated border border-navy-border rounded-xl px-4 py-3 text-white placeholder-text-muted focus:outline-none focus:border-fpl-green/60 focus:ring-1 focus:ring-fpl-green/30 transition-all text-sm disabled:opacity-50"
+          />
           <button
             type="submit"
-            disabled={localState.status === "loading" || !teamId.trim()}
+            disabled={isLoading || !teamId.trim()}
             className="px-5 py-3 bg-fpl-green text-fpl-purple rounded-xl font-semibold text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-fpl-green-dim active:scale-95 transition-all whitespace-nowrap"
           >
-            {localState.status === "loading" ? (
+            {isLoading ? (
               <span className="flex items-center gap-2">
                 <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -171,12 +177,20 @@ function TeamLoader({ onLoad }: { onLoad: (state: LoadState) => void }) {
           </button>
         </form>
 
-        {localState.status === "error" && (
+        {errorMessage && (
           <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20">
-            <svg className="w-4 h-4 text-red-400 mt-0.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-9.25a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zm.75 6a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+            <svg
+              className="w-4 h-4 text-red-400 mt-0.5 shrink-0"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-9.25a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zm.75 6a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                clipRule="evenodd"
+              />
             </svg>
-            <p className="text-red-300 text-sm">{localState.message}</p>
+            <p className="text-red-300 text-sm">{errorMessage}</p>
           </div>
         )}
       </div>
@@ -184,115 +198,106 @@ function TeamLoader({ onLoad }: { onLoad: (state: LoadState) => void }) {
   )
 }
 
-function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className="bg-navy-card border border-navy-border rounded-xl p-5">
-      <span className="text-text-muted text-xs uppercase tracking-wider">{label}</span>
-      <div
-        className={`text-3xl mt-1 ${accent ? "text-fpl-green" : "text-white"}`}
-        style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700 }}
-      >
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function GameweekResult({ state }: { state: Extract<LoadState, { status: "success" }> }) {
-  const { gameweek, teamData } = state
-  const { entry_history, picks } = teamData
-  const captainPick = picks.find((p) => p.is_captain)
-  const vicePick = picks.find((p) => p.is_vice_captain)
-
-  return (
-    <div className="max-w-5xl mx-auto px-6 pb-20">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="h-px flex-1 bg-navy-border" />
-        <div
-          className="px-4 py-1.5 rounded-full bg-fpl-green text-fpl-purple text-sm"
-          style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700 }}
-        >
-          GW{gameweek}
-        </div>
-        <div className="h-px flex-1 bg-navy-border" />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total Points" value={entry_history.total_points.toLocaleString()} />
-        <StatCard label="GW Points" value={String(entry_history.points)} />
-        <StatCard label="Overall Rank" value={`#${entry_history.overall_rank.toLocaleString()}`} accent />
-      </div>
-
-      <div className="bg-navy-card border border-navy-border rounded-2xl p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-2 h-6 rounded-full bg-fpl-green" />
-          <h3
-            className="text-lg text-white"
-            style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700 }}
-          >
-            TEAM LOADED SUCCESSFULLY
-          </h3>
-          <span className="ml-auto flex items-center gap-1.5 text-fpl-green text-sm font-medium">
-            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-            </svg>
-            Connected
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 text-sm">
-          <div>
-            <span className="text-text-muted block text-xs mb-0.5">Squad size</span>
-            <span className="text-white font-medium">{picks.length} players</span>
-          </div>
-          <div>
-            <span className="text-text-muted block text-xs mb-0.5">Active chip</span>
-            <span className="text-white font-medium">{teamData.active_chip ?? "None"}</span>
-          </div>
-          {captainPick && (
-            <div>
-              <span className="text-text-muted block text-xs mb-0.5">Captain (element)</span>
-              <span className="text-white font-medium">#{captainPick.element}</span>
-            </div>
-          )}
-          {vicePick && (
-            <div>
-              <span className="text-text-muted block text-xs mb-0.5">Vice-captain</span>
-              <span className="text-white font-medium">#{vicePick.element}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-xl border border-navy-border bg-navy-elevated p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <svg className="w-4 h-4 text-fpl-green" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
-            </svg>
-            <span className="text-sm font-medium text-text-secondary">Squad view coming next</span>
-          </div>
-          <p className="text-text-muted text-xs leading-relaxed">
-            Player cards, formation view, and transfer recommendations will appear here. Raw picks data has been logged to the browser console for verification.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function App() {
-  const [loadState, setLoadState] = useState<LoadState>({ status: "idle" })
+  const [appPhase, setAppPhase] = useState<AppPhase>({ phase: "idle" })
+
+  async function loadTeam(teamId: string) {
+    setAppPhase({ phase: "loading", message: "Fetching gameweek data..." })
+
+    try {
+      // Step 1: bootstrap + fixtures in parallel (both cached server-side)
+      const [bootstrap, fixtures] = await Promise.all([
+        fetchJson<BootstrapResponse>("/api/fpl/bootstrap"),
+        fetchJson<FplFixture[]>("/api/fpl/fixtures"),
+      ])
+
+      const currentEvent = bootstrap.events.find(e => e.is_current)
+      const gameweek =
+        currentEvent?.id ?? bootstrap.events.findIndex(e => !e.finished) + 1
+
+      setAppPhase({ phase: "loading", message: `Loading GW${gameweek} squad...` })
+
+      // Step 2: team picks for this gameweek
+      const teamPicks = await fetchJson<TeamPicksResponse>(
+        `/api/fpl/team/${teamId}/${gameweek}`,
+      )
+      console.log("[FPL] Raw team picks:", teamPicks)
+
+      setAppPhase({ phase: "loading", message: `Analysing ${teamPicks.picks.length} players...` })
+
+      // Step 3: all 15 player histories in parallel
+      const summaries = await Promise.all(
+        teamPicks.picks.map(pick =>
+          fetchJson<PlayerSummaryResponse>(`/api/fpl/player/${pick.element}`),
+        ),
+      )
+
+      // Step 4: build lookup maps and next-event id
+      const elementsMap = new Map(bootstrap.elements.map(el => [el.id, el]))
+      const teamsMap = new Map(bootstrap.teams.map(t => [t.id, t]))
+      const nextEventId = getNextEventId(fixtures, gameweek)
+
+      // Step 5: enrich each pick with prediction + fixture info
+      const enrichedPicks: EnrichedPick[] = teamPicks.picks.map((pick, i) => {
+        const element = elementsMap.get(pick.element)!
+        const team = teamsMap.get(element.team)!
+        const summary = summaries[i]
+        const prediction = calculatePrediction({ element, summary, fixtures, nextEventId })
+        const nextFixture = resolveFixtureInfo(fixtures, element.team, nextEventId, teamsMap)
+        return { pick, element, team, prediction, nextFixture }
+      })
+
+      // position 1-11 = starting, 12-15 = bench
+      const startingXI = enrichedPicks.filter(ep => ep.pick.position <= 11)
+      const bench = enrichedPicks.filter(ep => ep.pick.position > 11)
+
+      // predicted score = sum of (predictedPts × multiplier) for starters
+      // captain multiplier=2 doubles their contribution automatically
+      const rawScore = startingXI.reduce(
+        (sum, ep) => sum + ep.prediction.predictedPoints * ep.pick.multiplier,
+        0,
+      )
+
+      setAppPhase({
+        phase: "loaded",
+        squadData: {
+          gameweek,
+          startingXI,
+          bench,
+          predictedScore: Math.round(rawScore * 10) / 10,
+        },
+      })
+    } catch (err) {
+      setAppPhase({
+        phase: "error",
+        message: err instanceof Error ? err.message : "Failed to load team data.",
+      })
+    }
+  }
+
+  const isLoading = appPhase.phase === "loading"
+  const errorMessage = appPhase.phase === "error" ? appPhase.message : null
 
   return (
     <div className="min-h-full flex flex-col bg-navy">
       <Header />
       <main className="flex-1">
-        <Hero />
-        <TeamLoader onLoad={setLoadState} />
-        {loadState.status === "success" && <GameweekResult state={loadState} />}
+        {/* Hero only shown before squad is loaded */}
+        {appPhase.phase !== "loaded" && <Hero />}
+
+        <TeamLoader
+          onSubmit={loadTeam}
+          isLoading={isLoading}
+          errorMessage={errorMessage}
+        />
+
+        {isLoading && <LoadingCard message={appPhase.message} />}
+
+        {appPhase.phase === "loaded" && <SquadView squadData={appPhase.squadData} />}
       </main>
       <footer className="border-t border-navy-border py-5">
         <p className="text-center text-text-muted text-xs">
-          FPL Team Assistant — not affiliated with Fantasy Premier League or the Premier League.
+          FPL Team Assistant &mdash; not affiliated with Fantasy Premier League or the Premier League.
         </p>
       </footer>
     </div>

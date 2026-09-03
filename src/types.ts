@@ -20,9 +20,13 @@ export interface FplElement {
   second_name: string
   web_name: string
   team: number
-  element_type: number
+  element_type: number // 1=GK 2=DEF 3=MID 4=FWD
   now_cost: number
   total_points: number
+  points_per_game: string
+  ep_next: string | null
+  ep_this: string | null
+  chance_of_playing_next_round: number | null
   selected_by_percent: string
   form: string
   status: string
@@ -61,4 +65,82 @@ export interface TeamPicksResponse {
 
 export interface ApiError {
   error: string
+}
+
+// ── Fixtures ──────────────────────────────────────────────────────────────────
+
+export interface FplFixture {
+  id: number
+  team_h: number
+  team_a: number
+  team_h_difficulty: number
+  team_a_difficulty: number
+  event: number | null
+  finished: boolean
+  started: boolean | null
+  kickoff_time: string | null
+}
+
+// ── Player summary ────────────────────────────────────────────────────────────
+
+export interface PlayerHistoryEntry {
+  element: number
+  fixture: number
+  opponent_team: number
+  total_points: number
+  was_home: boolean
+  kickoff_time: string
+  round: number
+  minutes: number
+  goals_scored: number
+  assists: number
+  clean_sheets: number
+  goals_conceded: number
+  own_goals: number
+  penalties_saved: number
+  yellow_cards: number
+  red_cards: number
+  saves: number
+  bonus: number
+  bps: number
+}
+
+export interface PlayerSummaryResponse {
+  history: PlayerHistoryEntry[]
+  fixtures: unknown[]
+  history_past: unknown[]
+}
+
+// ── Prediction engine ─────────────────────────────────────────────────────────
+
+export interface FixtureInfo {
+  opponentTeamId: number
+  opponentShortName: string
+  isHome: boolean
+  difficulty: number
+  event: number
+}
+
+export interface PlayerPrediction {
+  elementId: number
+  baseScore: number
+  predictedPoints: number
+  epNext: number | null
+}
+
+// ── Squad state ───────────────────────────────────────────────────────────────
+
+export interface EnrichedPick {
+  pick: TeamPick
+  element: FplElement
+  team: FplTeam
+  prediction: PlayerPrediction
+  nextFixture: FixtureInfo | null
+}
+
+export interface SquadData {
+  gameweek: number
+  startingXI: EnrichedPick[]
+  bench: EnrichedPick[]
+  predictedScore: number
 }
