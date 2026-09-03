@@ -36,7 +36,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 function Hero() {
   const displayed = useCountUp(84.2, 1, 0.9)
   return (
-    <section className="bg-base border-b border-line">
+    <section className="bg-base border-b border-line" aria-labelledby="landing-hero-heading">
       <div className="max-w-5xl mx-auto px-5 py-20 sm:py-28">
         <div className="flex flex-col sm:flex-row sm:items-start sm:gap-16 gap-10">
 
@@ -56,6 +56,7 @@ function Hero() {
 
           <div className="flex-1">
             <h1
+              id="landing-hero-heading"
               className="text-ink leading-[1.08] mb-6"
               style={{
                 fontFamily: "var(--font-rajdhani)",
@@ -122,9 +123,10 @@ function TeamLoader({
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-5 py-10">
+    <section className="max-w-5xl mx-auto px-5 py-10" aria-labelledby="team-loader-heading">
       <div className="bg-surface border border-line rounded-xl p-6 sm:p-8 max-w-xl">
         <h2
+          id="team-loader-heading"
           className="text-ink mb-1"
           style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "20px" }}
         >
@@ -175,7 +177,7 @@ function TeamLoader({
           </div>
         )}
       </div>
-    </div>
+    </section>
   )
 }
 

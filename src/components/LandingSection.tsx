@@ -256,9 +256,17 @@ function BenchPreview() {
 
 // ── Section wrapper ───────────────────────────────────────────────────────────
 
-function SectionWrap({ children, alt = false }: { children: React.ReactNode; alt?: boolean }) {
+function SectionWrap({
+  children,
+  alt = false,
+  label,
+}: {
+  children: React.ReactNode
+  alt?: boolean
+  label: string
+}) {
   return (
-    <section className={`border-t border-line ${alt ? "bg-surface" : "bg-base"}`}>
+    <section className={`border-t border-line ${alt ? "bg-surface" : "bg-base"}`} aria-label={label}>
       <div className="max-w-5xl mx-auto px-5 py-20 sm:py-28">
         {children}
       </div>
@@ -295,7 +303,7 @@ function Frame({ children, label }: { children: React.ReactNode; label?: string 
 
 function PitchSection() {
   return (
-    <SectionWrap>
+    <SectionWrap label="Squad prediction features">
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-12 lg:gap-16 items-center">
 
         {/* Copy */}
@@ -359,7 +367,7 @@ function PitchSection() {
 
 function ScoreSection() {
   return (
-    <SectionWrap alt>
+    <SectionWrap alt label="Gameweek score prediction features">
       <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12 lg:gap-16 items-center">
 
         {/* Live score banner */}
@@ -403,7 +411,7 @@ function ScoreSection() {
 
 function TransferSection() {
   return (
-    <SectionWrap>
+    <SectionWrap label="Transfer suggestion features">
       <div className="max-w-xl mx-auto text-center">
         <Reveal delay={0}>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-line bg-surface-2 mb-6">
