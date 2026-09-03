@@ -1,8 +1,10 @@
 import { Link } from "react-router"
 import { useState } from "react"
+import { motion, useReducedMotion } from "motion/react"
 import type { EnrichedPick, SquadData } from "../types"
 import { Jersey, Crest } from "./FplImages"
 import TransferSuggestions from "./TransferSuggestions"
+import { useCountUp } from "../hooks/useCountUp"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -36,36 +38,38 @@ function ScoreBanner({ predictedScore, gameweek }: { predictedScore: number; gam
   const gap = predictedScore - TARGET
   const above = gap >= 0
   const barPct = Math.min((predictedScore / 100) * 100, 100)
+  const displayScore = useCountUp(predictedScore, 1, 0.9)
+  const displayGap = useCountUp(Math.abs(gap), 1, 0.85)
 
   return (
-    <div className="border-l-4 border-primary rounded-r-xl mb-8 bg-primary-subtle">
-      <div className="px-6 py-5">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <div className="border-l-4 border-primary rounded-r-xl mb-10 bg-primary-subtle">
+      <div className="px-6 sm:px-8 py-6 sm:py-7">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <p className="text-ink-3 text-[10px] font-medium tracking-wider uppercase mb-1">
+            <p className="text-ink-3 text-[10px] font-medium tracking-wider uppercase mb-2">
               GW{gameweek} predicted score
             </p>
             <div
-              className="text-ink leading-none"
-              style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "72px" }}
+              className="text-ink leading-none num-display"
+              style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "80px" }}
             >
-              {predictedScore.toFixed(1)}
+              {displayScore}
             </div>
-            <p className="text-ink-3 text-xs mt-1">starting XI projected points</p>
+            <p className="text-ink-3 text-xs mt-2">starting XI projected points</p>
           </div>
 
           <div className="sm:text-right">
             <div
-              className={above ? "text-easy" : "text-mid"}
-              style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "28px", lineHeight: 1 }}
+              className={`num-display ${above ? "text-easy" : "text-mid"}`}
+              style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "32px", lineHeight: 1 }}
             >
-              {above ? "+" : ""}{gap.toFixed(1)}
+              {above ? "+" : "-"}{displayGap}
             </div>
-            <p className="text-ink-3 text-xs mt-0.5">vs 80pt target</p>
+            <p className="text-ink-3 text-xs mt-1">vs 80pt target</p>
           </div>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-6">
           <div className="relative h-1.5 bg-line rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-700 ${above ? "bg-easy" : "bg-mid"}`}
@@ -76,7 +80,7 @@ function ScoreBanner({ predictedScore, gameweek }: { predictedScore: number; gam
               style={{ left: "80%" }}
             />
           </div>
-          <div className="flex justify-between mt-1">
+          <div className="flex justify-between mt-1.5">
             <span className="text-ink-3 text-[10px]">0</span>
             <span className="text-ink-3 text-[10px]">80pt target</span>
             <span className="text-ink-3 text-[10px]">100</span>
@@ -216,12 +220,20 @@ function PitchCard({ ep }: { ep: EnrichedPick }) {
 
 // ── Pitch row ─────────────────────────────────────────────────────────────────
 
-function PitchRow({ picks }: { picks: EnrichedPick[] }) {
+function PitchRow({ picks, startIndex = 0 }: { picks: EnrichedPick[]; startIndex?: number }) {
+  const reduced = useReducedMotion()
   if (picks.length === 0) return null
   return (
     <div className="flex justify-center gap-2 sm:gap-2.5">
-      {picks.map(ep => (
-        <PitchCard key={ep.pick.element} ep={ep} />
+      {picks.map((ep, i) => (
+        <motion.div
+          key={ep.pick.element}
+          initial={reduced ? {} : { opacity: 0, scale: 0.88, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.28, delay: (startIndex + i) * 0.045, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <PitchCard ep={ep} />
+        </motion.div>
       ))}
     </div>
   )
@@ -235,6 +247,12 @@ function PitchFormation({ startingXI }: { startingXI: EnrichedPick[] }) {
   const mid = startingXI.filter(ep => ep.element.element_type === 3)
   const fwd = startingXI.filter(ep => ep.element.element_type === 4)
 
+  // Stagger indices flow fwd→mid→def→gk so formation "builds" top to bottom
+  const fwdStart = 0
+  const midStart = fwd.length
+  const defStart = midStart + mid.length
+  const gkStart  = defStart + def.length
+
   return (
     <div
       className="relative rounded-xl overflow-hidden"
@@ -242,10 +260,10 @@ function PitchFormation({ startingXI }: { startingXI: EnrichedPick[] }) {
     >
       <PitchLines />
       <div className="relative z-10 flex flex-col gap-6 py-10 px-4">
-        <PitchRow picks={fwd} />
-        <PitchRow picks={mid} />
-        <PitchRow picks={def} />
-        <PitchRow picks={gk} />
+        <PitchRow picks={fwd} startIndex={fwdStart} />
+        <PitchRow picks={mid} startIndex={midStart} />
+        <PitchRow picks={def} startIndex={defStart} />
+        <PitchRow picks={gk}  startIndex={gkStart} />
       </div>
     </div>
   )
@@ -261,7 +279,7 @@ function ListCard({ ep }: { ep: EnrichedPick }) {
   const isVc = pick.is_vice_captain
 
   return (
-    <div className="flex items-center gap-3 bg-surface border border-line rounded-xl p-3 min-h-[56px]">
+    <div className="flex items-center gap-3 bg-surface border border-line rounded-xl p-3 sm:p-4 min-h-[56px] hover:border-primary/25 transition-colors duration-150">
       {/* Position color strip */}
       <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: stripColor }} />
 
@@ -332,6 +350,8 @@ const POSITION_GROUPS = [
 ] as const
 
 function MobileListView({ startingXI }: { startingXI: EnrichedPick[] }) {
+  const reduced = useReducedMotion()
+  let globalIndex = 0
   return (
     <div className="space-y-6">
       {POSITION_GROUPS.map(({ type, label }) => {
@@ -339,14 +359,24 @@ function MobileListView({ startingXI }: { startingXI: EnrichedPick[] }) {
         if (picks.length === 0) return null
         return (
           <div key={type}>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-3">
               <span className="text-ink-3 text-xs font-medium">{label}</span>
               <div className="flex-1 h-px bg-line" />
             </div>
             <div className="space-y-2">
-              {picks.map(ep => (
-                <ListCard key={ep.pick.element} ep={ep} />
-              ))}
+              {picks.map(ep => {
+                const i = globalIndex++
+                return (
+                  <motion.div
+                    key={ep.pick.element}
+                    initial={reduced ? {} : { opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.25, delay: i * 0.04, ease: "easeOut" }}
+                  >
+                    <ListCard ep={ep} />
+                  </motion.div>
+                )
+              })}
             </div>
           </div>
         )
@@ -531,13 +561,13 @@ export default function SquadView({ squadData, isAuthenticated }: { squadData: S
 
   return (
     <>
-      <section className="max-w-5xl mx-auto px-5 pb-10">
+      <section className="max-w-5xl mx-auto px-5 pb-12">
         <ScoreBanner predictedScore={predictedScore} gameweek={gameweek} />
 
         {isAuthenticated ? (
           <>
             {/* Free transfers control */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-8">
               <FreeTransfersStepper value={freeTransfers} onChange={setFreeTransfers} />
               <span className="text-ink-3 text-xs hidden sm:block">
                 £{(squadData.bank / 10).toFixed(1)}m in bank
@@ -545,7 +575,7 @@ export default function SquadView({ squadData, isAuthenticated }: { squadData: S
             </div>
 
             {/* Starting XI */}
-            <div className="mb-8">
+            <div className="mb-10">
               <SectionDivider label="Starting XI" count={startingXI.length} />
               <div className="hidden sm:block">
                 <PitchFormation startingXI={startingXI} />

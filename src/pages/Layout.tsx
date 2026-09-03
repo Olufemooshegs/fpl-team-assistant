@@ -1,5 +1,6 @@
-import { Outlet, Link, useNavigate } from "react-router"
+import { Outlet, Link, useNavigate, useLocation } from "react-router"
 import { useEffect, useState } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { useAuth } from "../contexts/AuthContext"
 
 // ── Dark mode ─────────────────────────────────────────────────────────────────
@@ -148,15 +149,31 @@ function Header({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
 
 export default function Layout() {
   const [dark, toggleDark] = useDarkMode()
+  const location = useLocation()
+  const reduced = useReducedMotion()
+
+  const transition = reduced
+    ? { duration: 0 }
+    : { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }
 
   return (
     <div className="min-h-full flex flex-col bg-base">
       <Header dark={dark} onToggle={toggleDark} />
       <main className="flex-1">
-        <Outlet />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            initial={reduced ? { opacity: 1 } : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduced ? { opacity: 1 } : { opacity: 0, y: -8 }}
+            transition={transition}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
-      <footer className="border-t border-line py-5 mt-4">
-        <p className="text-center text-ink-3 text-xs">
+      <footer className="border-t border-line py-6 mt-6">
+        <p className="text-center text-ink-3 text-xs leading-relaxed">
           FPL Team Assistant &mdash; not affiliated with Fantasy Premier League or the Premier League.
         </p>
       </footer>

@@ -129,6 +129,19 @@ body {
   font-family: var(--font-dm-sans);
   background-color: var(--c-base);
   color: var(--c-ink);
+  line-height: 1.55;
+}
+
+/* Tighter tracking on large Rajdhani display numerals */
+.num-display {
+  letter-spacing: -0.025em;
+}
+
+/* Smooth focus rings using primary color */
+:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 /* Subtle scrollbar */

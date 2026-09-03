@@ -1,5 +1,37 @@
+import { useRef } from "react"
+import { motion, useInView, useReducedMotion } from "motion/react"
 import type { EnrichedPick } from "../types"
 import { Jersey, Crest } from "./FplImages"
+
+// ── Scroll-reveal primitives ──────────────────────────────────────────────────
+
+function Reveal({
+  children,
+  delay = 0,
+  y = 20,
+  className = "",
+}: {
+  children: React.ReactNode
+  delay?: number
+  y?: number
+  className?: string
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, margin: "-80px 0px" })
+  const reduced = useReducedMotion()
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: reduced ? 0 : delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
 // ── Mock squad data ───────────────────────────────────────────────────────────
 // Real PL team codes from the FPL CDN, so jersey images actually load.
@@ -227,7 +259,7 @@ function BenchPreview() {
 function SectionWrap({ children, alt = false }: { children: React.ReactNode; alt?: boolean }) {
   return (
     <section className={`border-t border-line ${alt ? "bg-surface" : "bg-base"}`}>
-      <div className="max-w-5xl mx-auto px-5 py-16 sm:py-20">
+      <div className="max-w-5xl mx-auto px-5 py-20 sm:py-28">
         {children}
       </div>
     </section>
@@ -251,7 +283,7 @@ function Frame({ children, label }: { children: React.ReactNode; label?: string 
             <span className="text-ink-3 text-[11px] ml-1">{label}</span>
           </div>
         )}
-        <div className="p-3 sm:p-4">
+        <div className="p-4 sm:p-6">
           {children}
         </div>
       </div>
@@ -264,56 +296,62 @@ function Frame({ children, label }: { children: React.ReactNode; label?: string 
 function PitchSection() {
   return (
     <SectionWrap>
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-10 lg:gap-16 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-12 lg:gap-16 items-center">
 
         {/* Copy */}
         <div>
-          <h2
-            className="text-ink mb-4 leading-tight"
-            style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "clamp(28px, 4vw, 40px)" }}
-          >
-            Your squad on the pitch, with predicted points for every player
-          </h2>
-          <p className="text-ink-2 text-base leading-relaxed mb-6">
-            See your starting XI laid out in formation — goalkeeper at the
-            bottom, forwards at the top. Each card shows the shirt, the
-            predicted gameweek score, and your next fixture coloured by
-            difficulty so you can spot problems at a glance.
-          </p>
+          <Reveal delay={0}>
+            <h2
+              className="text-ink mb-5 leading-tight"
+              style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "clamp(28px, 4vw, 40px)" }}
+            >
+              Your squad on the pitch, with predicted points for every player
+            </h2>
+          </Reveal>
+          <Reveal delay={0.08}>
+            <p className="text-ink-2 text-base leading-relaxed mb-7">
+              See your starting XI laid out in formation — goalkeeper at the
+              bottom, forwards at the top. Each card shows the shirt, the
+              predicted gameweek score, and your next fixture coloured by
+              difficulty so you can spot problems at a glance.
+            </p>
+          </Reveal>
           <ul className="space-y-3">
             {[
               ["Fixture difficulty", "Easy (green), average (amber), hard (red) — instantly scannable"],
               ["Captain indicator", "Your captain's predicted score is automatically doubled"],
               ["Bench at the bottom", "Four bench players shown below, de-prioritised but still visible"],
-            ].map(([title, desc]) => (
-              <li key={title} className="flex items-start gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <p className="text-ink-2 text-sm leading-relaxed">
-                  <span className="font-semibold text-ink">{title} — </span>
-                  {desc}
-                </p>
-              </li>
+            ].map(([title, desc], i) => (
+              <Reveal key={title} delay={0.14 + i * 0.07}>
+                <li className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                  <p className="text-ink-2 text-sm leading-relaxed">
+                    <span className="font-semibold text-ink">{title} — </span>
+                    {desc}
+                  </p>
+                </li>
+              </Reveal>
             ))}
           </ul>
         </div>
 
         {/* Live pitch preview — hidden on mobile (too compact), shown sm+ */}
-        <div className="hidden sm:block">
+        <Reveal delay={0.1} y={24} className="hidden sm:block">
           <Frame label="fplassistant.app — Your Squad">
             <PitchPreview />
-            <div className="mt-3 pt-3 border-t border-line">
+            <div className="mt-4 pt-4 border-t border-line">
               <p className="text-ink-3 text-[10px] mb-2 font-medium">Bench</p>
               <BenchPreview />
             </div>
           </Frame>
-        </div>
+        </Reveal>
 
         {/* Mobile: show score preview instead */}
-        <div className="sm:hidden">
+        <Reveal className="sm:hidden">
           <Frame>
             <ScorePreview />
           </Frame>
-        </div>
+        </Reveal>
       </div>
     </SectionWrap>
   )
@@ -322,34 +360,40 @@ function PitchSection() {
 function ScoreSection() {
   return (
     <SectionWrap alt>
-      <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 lg:gap-16 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12 lg:gap-16 items-center">
 
-        {/* Live score banner — reversed column order so copy is right on desktop */}
-        <div className="lg:order-first">
+        {/* Live score banner */}
+        <Reveal delay={0.05} y={24} className="lg:order-first">
           <Frame label="fplassistant.app — GW22 Prediction">
             <ScorePreview />
           </Frame>
-        </div>
+        </Reveal>
 
         {/* Copy */}
         <div>
-          <h2
-            className="text-ink mb-4 leading-tight"
-            style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "clamp(28px, 4vw, 40px)" }}
-          >
-            Know if you will hit 80 before the deadline
-          </h2>
-          <p className="text-ink-2 text-base leading-relaxed mb-4">
-            The predicted GW score is calculated from your players' recent
-            form (weighted toward the last few gameweeks), fixture
-            difficulty, home advantage, and minutes reliability.
-          </p>
-          <p className="text-ink-2 text-base leading-relaxed">
-            The 80-point benchmark is shown on the progress bar so you
-            know immediately whether to play a chip, make a transfer, or
-            hold steady. You can see exactly how far above or below target
-            you are.
-          </p>
+          <Reveal delay={0}>
+            <h2
+              className="text-ink mb-5 leading-tight"
+              style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "clamp(28px, 4vw, 40px)" }}
+            >
+              Know if you will hit 80 before the deadline
+            </h2>
+          </Reveal>
+          <Reveal delay={0.08}>
+            <p className="text-ink-2 text-base leading-relaxed mb-5">
+              The predicted GW score is calculated from your players' recent
+              form (weighted toward the last few gameweeks), fixture
+              difficulty, home advantage, and minutes reliability.
+            </p>
+          </Reveal>
+          <Reveal delay={0.14}>
+            <p className="text-ink-2 text-base leading-relaxed">
+              The 80-point benchmark is shown on the progress bar so you
+              know immediately whether to play a chip, make a transfer, or
+              hold steady. You can see exactly how far above or below target
+              you are.
+            </p>
+          </Reveal>
         </div>
 
       </div>
@@ -361,50 +405,59 @@ function TransferSection() {
   return (
     <SectionWrap>
       <div className="max-w-xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-line bg-surface-2 mb-6">
-          <div className="w-1.5 h-1.5 rounded-full bg-mid" />
-          <span className="text-ink-3 text-xs font-medium">In development</span>
-        </div>
-
-        <h2
-          className="text-ink mb-4 leading-tight"
-          style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "clamp(28px, 4vw, 40px)" }}
-        >
-          Transfer suggestions, ranked by impact
-        </h2>
-        <p className="text-ink-2 text-base leading-relaxed mb-8">
-          The next update will surface smart transfer targets ranked by
-          predicted points gain, fixture run, and differential value — so
-          you spend your free transfers where they matter most. No guesswork.
-        </p>
-
-        {/* Skeleton preview of an upcoming transfer card */}
-        <div className="bg-surface border border-line rounded-xl p-5 text-left max-w-md mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-ink-3 text-xs font-medium uppercase tracking-wide">Transfer out</p>
-            <p className="text-ink-3 text-xs font-medium uppercase tracking-wide">Transfer in</p>
+        <Reveal delay={0}>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-line bg-surface-2 mb-6">
+            <div className="w-1.5 h-1.5 rounded-full bg-mid" />
+            <span className="text-ink-3 text-xs font-medium">In development</span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex-1 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-line animate-pulse" />
-              <div className="space-y-1.5 flex-1">
-                <div className="h-3 bg-line rounded animate-pulse w-3/4" />
-                <div className="h-2.5 bg-line rounded animate-pulse w-1/2" />
+        </Reveal>
+
+        <Reveal delay={0.06}>
+          <h2
+            className="text-ink mb-5 leading-tight"
+            style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "clamp(28px, 4vw, 40px)" }}
+          >
+            Transfer suggestions, ranked by impact
+          </h2>
+        </Reveal>
+
+        <Reveal delay={0.12}>
+          <p className="text-ink-2 text-base leading-relaxed mb-10">
+            The next update will surface smart transfer targets ranked by
+            predicted points gain, fixture run, and differential value — so
+            you spend your free transfers where they matter most. No guesswork.
+          </p>
+        </Reveal>
+
+        {/* Skeleton preview */}
+        <Reveal delay={0.18} y={16}>
+          <div className="bg-surface border border-line rounded-xl p-6 text-left max-w-md mx-auto">
+            <div className="flex items-center justify-between mb-5">
+              <p className="text-ink-3 text-xs font-medium uppercase tracking-wide">Transfer out</p>
+              <p className="text-ink-3 text-xs font-medium uppercase tracking-wide">Transfer in</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-line animate-pulse" />
+                <div className="space-y-1.5 flex-1">
+                  <div className="h-3 bg-line rounded animate-pulse w-3/4" />
+                  <div className="h-2.5 bg-line rounded animate-pulse w-1/2" />
+                </div>
+              </div>
+              <div className="w-6 text-center text-ink-3">→</div>
+              <div className="flex-1 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-line animate-pulse" />
+                <div className="space-y-1.5 flex-1">
+                  <div className="h-3 bg-line rounded animate-pulse w-3/4" />
+                  <div className="h-2.5 bg-line rounded animate-pulse w-1/2" />
+                </div>
               </div>
             </div>
-            <div className="w-6 text-center text-ink-3">→</div>
-            <div className="flex-1 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-line animate-pulse" />
-              <div className="space-y-1.5 flex-1">
-                <div className="h-3 bg-line rounded animate-pulse w-3/4" />
-                <div className="h-2.5 bg-line rounded animate-pulse w-1/2" />
-              </div>
+            <div className="mt-5 pt-5 border-t border-line text-center">
+              <p className="text-ink-3 text-xs">Coming in the next update</p>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-line text-center">
-            <p className="text-ink-3 text-xs">Coming in the next update</p>
-          </div>
-        </div>
+        </Reveal>
       </div>
     </SectionWrap>
   )

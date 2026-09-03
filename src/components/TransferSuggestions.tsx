@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { motion, useReducedMotion } from "motion/react"
 import type { SquadData, FplElement, FplTeam } from "../types"
 import {
   analyseTransfers,
@@ -116,7 +117,7 @@ function DeltaBadge({
 
 function SingleSwapCard({ swap, hitCost }: { swap: SingleSwap; hitCost: number }) {
   return (
-    <div className="bg-surface border border-line rounded-xl p-4">
+    <div className="bg-surface border border-line rounded-xl p-5 hover:border-primary/25 transition-colors duration-150">
       <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
         <PlayerChip
           name={swap.outPick.element.web_name}
@@ -288,6 +289,51 @@ function Tab({
   )
 }
 
+// ── Staggered card list ───────────────────────────────────────────────────────
+
+function CardList({
+  combo,
+  singles,
+  hitCostFn,
+  tabKey,
+}: {
+  combo: ComboSwap | null
+  singles: { swap: SingleSwap; hitCost: number; net: number }[]
+  hitCostFn: (numTransfers: number) => number
+  tabKey: string
+}) {
+  const reduced = useReducedMotion()
+  let idx = 0
+
+  const wrap = (key: string | number, child: React.ReactNode) => {
+    const i = idx++
+    return (
+      <motion.div
+        key={key}
+        initial={reduced ? {} : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {child}
+      </motion.div>
+    )
+  }
+
+  return (
+    <motion.div
+      key={tabKey}
+      className="space-y-3"
+      initial={false}
+      animate={{}}
+    >
+      {combo && wrap("combo", <ComboSwapCard combo={combo} hitCost={hitCostFn(2)} />)}
+      {singles.map((x, i) =>
+        wrap(`single-${i}`, <SingleSwapCard swap={x.swap} hitCost={x.hitCost} />)
+      )}
+    </motion.div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function TransferSuggestions({
@@ -333,9 +379,9 @@ export default function TransferSuggestions({
   const hasAnything = hasFreeContent || hasHitContent
 
   return (
-    <section className="max-w-5xl mx-auto px-5 pb-16">
+    <section className="max-w-5xl mx-auto px-5 pb-20">
       {/* Section header */}
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 mb-6">
         <span
           className="text-ink"
           style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "22px" }}
@@ -359,53 +405,39 @@ export default function TransferSuggestions({
       ) : (
         <>
           {/* Tabs */}
-          <div className="flex gap-1 bg-surface-2 border border-line rounded-xl p-1 w-fit mb-5">
+          <div className="flex gap-1 bg-surface-2 border border-line rounded-xl p-1 w-fit mb-6">
             <Tab label="Free transfers" active={activeTab === "free"} onClick={() => setActiveTab("free")} />
             <Tab label="Including hits" active={activeTab === "hits"} onClick={() => setActiveTab("hits")} />
           </div>
 
           {/* Free transfers tab */}
           {activeTab === "free" && (
-            <div className="space-y-3">
-              {!hasFreeContent ? (
-                <EmptyState message="No beneficial swaps within your free transfer allowance. Check the 'Including hits' tab." />
-              ) : (
-                <>
-                  {/* Best combo first if it's free */}
-                  {comboIsFree && analysis.bestCombo && comboIsWorthIt && (
-                    <ComboSwapCard combo={analysis.bestCombo} hitCost={0} />
-                  )}
-
-                  {/* Singles */}
-                  {freeSingles.map((swap, i) => (
-                    <SingleSwapCard key={i} swap={swap} hitCost={0} />
-                  ))}
-                </>
-              )}
-            </div>
+            !hasFreeContent ? (
+              <EmptyState message="No beneficial swaps within your free transfer allowance. Check 'Including hits'." />
+            ) : (
+              <CardList
+                key="free"
+                tabKey="free"
+                combo={comboIsFree && comboIsWorthIt ? analysis.bestCombo : null}
+                singles={freeSingles.map(s => ({ swap: s, hitCost: 0, net: s.pointDelta }))}
+                hitCostFn={() => 0}
+              />
+            )
           )}
 
           {/* Including hits tab */}
           {activeTab === "hits" && (
-            <div className="space-y-3">
-              {!hasHitContent ? (
-                <EmptyState message="No additional improvements found beyond your free transfers." />
-              ) : (
-                <>
-                  {/* Combo with hit */}
-                  {!comboIsFree && analysis.bestCombo && comboIsWorthIt && (
-                    <ComboSwapCard combo={analysis.bestCombo} hitCost={comboHit} />
-                  )}
-
-                  {/* Hit singles sorted by net delta */}
-                  {hitSingles
-                    .sort((a, b) => b.net - a.net)
-                    .map((x, i) => (
-                      <SingleSwapCard key={i} swap={x.swap} hitCost={x.hitCost} />
-                    ))}
-                </>
-              )}
-            </div>
+            !hasHitContent ? (
+              <EmptyState message="No additional improvements found beyond your free transfers." />
+            ) : (
+              <CardList
+                key="hits"
+                tabKey="hits"
+                combo={!comboIsFree && comboIsWorthIt ? analysis.bestCombo : null}
+                singles={hitSingles.sort((a, b) => b.net - a.net)}
+                hitCostFn={n => hitCostFor(n, freeTransfers)}
+              />
+            )
           )}
         </>
       )}

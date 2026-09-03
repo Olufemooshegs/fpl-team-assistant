@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useCountUp } from "../hooks/useCountUp"
 import type {
   BootstrapResponse,
   FplFixture,
@@ -33,28 +34,29 @@ async function fetchJson<T>(url: string): Promise<T> {
 // ── Hero ──────────────────────────────────────────────────────────────────────
 
 function Hero() {
+  const displayed = useCountUp(84.2, 1, 0.9)
   return (
     <section className="bg-base border-b border-line">
-      <div className="max-w-5xl mx-auto px-5 py-14 sm:py-20">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:gap-16 gap-8">
+      <div className="max-w-5xl mx-auto px-5 py-20 sm:py-28">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:gap-16 gap-10">
 
           <div className="order-first sm:order-last sm:shrink-0 sm:text-right">
             <div
-              className="text-primary leading-none"
+              className="text-primary leading-none num-display"
               style={{
                 fontFamily: "var(--font-rajdhani)",
                 fontWeight: 700,
                 fontSize: "clamp(80px, 14vw, 148px)",
               }}
             >
-              84.2
+              {displayed}
             </div>
-            <p className="text-ink-3 text-sm mt-1">predicted this gameweek</p>
+            <p className="text-ink-3 text-sm mt-2">predicted this gameweek</p>
           </div>
 
           <div className="flex-1">
             <h1
-              className="text-ink leading-[1.08] mb-5"
+              className="text-ink leading-[1.08] mb-6"
               style={{
                 fontFamily: "var(--font-rajdhani)",
                 fontWeight: 700,
@@ -120,8 +122,8 @@ function TeamLoader({
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-5 py-8">
-      <div className="bg-surface border border-line rounded-xl p-6 max-w-xl">
+    <div className="max-w-5xl mx-auto px-5 py-10">
+      <div className="bg-surface border border-line rounded-xl p-6 sm:p-8 max-w-xl">
         <h2
           className="text-ink mb-1"
           style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "20px" }}
