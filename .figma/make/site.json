@@ -1,1 +1,10 @@
-{}
+{
+  "description": "Effortlessly manage your Fantasy Premier League team with data-driven insights and transfer suggestions to maximize your gameweek points.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
