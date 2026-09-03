@@ -1,7 +1,14 @@
 {
-  "description": "Effortlessly manage your Fantasy Premier League team with data-driven insights and transfer suggestions to maximize your gameweek points.",
+  "title": "FPL Team Assistant — Data-Driven Transfer Suggestions to Hit 80+ Points",
+  "description": "Import your FPL Team ID, see every player's predicted points for next gameweek, and make data-driven transfer decisions to hit 80+.",
   "robots": {
-    "index": false
+    "index": true
+  },
+  "icons": {
+    "icon": "/favicon.svg"
+  },
+  "customScripts": {
+    "headStart": "<meta property=\"og:type\" content=\"website\" /><meta name=\"theme-color\" content=\"#2454FF\" />"
   },
   "accessibility": {
     "addBypassLinks": false,

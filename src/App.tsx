@@ -10,6 +10,7 @@ import type {
 } from "./types"
 import { calculatePrediction, getNextEventId, resolveFixtureInfo } from "./services/prediction"
 import SquadView from "./components/SquadView"
+import LandingSection from "./components/LandingSection"
 
 // ── Dark mode ─────────────────────────────────────────────────────────────────
 
@@ -336,6 +337,7 @@ export default function App() {
         <TeamLoader onSubmit={loadTeam} isLoading={isLoading} errorMessage={errorMessage} />
         {isLoading && <LoadingCard message={appPhase.message} />}
         {appPhase.phase === "loaded" && <SquadView squadData={appPhase.squadData} />}
+        {appPhase.phase === "idle" && <LandingSection />}
       </main>
       <footer className="border-t border-line py-5 mt-4">
         <p className="text-center text-ink-3 text-xs">
