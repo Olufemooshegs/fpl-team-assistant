@@ -1,3 +1,4 @@
+import { Link } from "react-router"
 import type { EnrichedPick, SquadData } from "../types"
 import { Jersey, Crest } from "./FplImages"
 
@@ -417,39 +418,102 @@ function BenchCard({ ep }: { ep: EnrichedPick }) {
   )
 }
 
+// ── Auth gate (teaser overlay) ────────────────────────────────────────────────
+
+function AuthGate({ startingXI }: { startingXI: EnrichedPick[] }) {
+  return (
+    <div className="relative">
+      {/* Real pitch/list — blurred */}
+      <div
+        style={{ filter: "blur(5px)", pointerEvents: "none", userSelect: "none" }}
+        aria-hidden="true"
+      >
+        <div className="mb-4">
+          <SectionDivider label="Starting XI" count={startingXI.length} />
+          <div className="hidden sm:block">
+            <PitchFormation startingXI={startingXI} />
+          </div>
+          <div className="block sm:hidden">
+            <MobileListView startingXI={startingXI} />
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay */}
+      <div className="absolute inset-0 flex items-center justify-center z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-base/40 via-base/75 to-base/95" />
+        <div className="relative z-20 bg-surface border border-line rounded-2xl p-8 text-center max-w-sm mx-5 w-full">
+          {/* Lock icon */}
+          <div className="w-12 h-12 rounded-xl bg-primary-subtle border border-primary/20 flex items-center justify-center mx-auto mb-5">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+
+          <h3
+            className="text-ink mb-2 leading-tight"
+            style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "22px" }}
+          >
+            Sign up free to see your full squad
+          </h3>
+          <p className="text-ink-2 text-sm leading-relaxed mb-6">
+            See predicted points for every player and get data-driven transfer suggestions.
+          </p>
+
+          <Link to="/login?mode=signup">
+            <button className="w-full h-11 bg-primary text-white rounded-lg font-semibold text-sm cursor-pointer hover:opacity-90 transition-opacity mb-3">
+              Create free account
+            </button>
+          </Link>
+
+          <p className="text-ink-3 text-sm">
+            Already have an account?{" "}
+            <Link to="/login" className="text-primary hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Squad View ────────────────────────────────────────────────────────────────
 
-export default function SquadView({ squadData }: { squadData: SquadData }) {
+export default function SquadView({ squadData, isAuthenticated }: { squadData: SquadData; isAuthenticated: boolean }) {
   const { gameweek, startingXI, bench, predictedScore } = squadData
 
   return (
     <section className="max-w-5xl mx-auto px-5 pb-24">
       <ScoreBanner predictedScore={predictedScore} gameweek={gameweek} />
 
-      {/* Starting XI */}
-      <div className="mb-8">
-        <SectionDivider label="Starting XI" count={startingXI.length} />
+      {isAuthenticated ? (
+        <>
+          {/* Starting XI */}
+          <div className="mb-8">
+            <SectionDivider label="Starting XI" count={startingXI.length} />
+            <div className="hidden sm:block">
+              <PitchFormation startingXI={startingXI} />
+            </div>
+            <div className="block sm:hidden">
+              <MobileListView startingXI={startingXI} />
+            </div>
+          </div>
 
-        {/* Desktop: pitch formation */}
-        <div className="hidden sm:block">
-          <PitchFormation startingXI={startingXI} />
-        </div>
-
-        {/* Mobile: grouped vertical list */}
-        <div className="block sm:hidden">
-          <MobileListView startingXI={startingXI} />
-        </div>
-      </div>
-
-      {/* Bench */}
-      <div>
-        <SectionDivider label="Bench" count={bench.length} />
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center">
-          {bench.map(ep => (
-            <BenchCard key={ep.pick.element} ep={ep} />
-          ))}
-        </div>
-      </div>
+          {/* Bench */}
+          <div>
+            <SectionDivider label="Bench" count={bench.length} />
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center">
+              {bench.map(ep => (
+                <BenchCard key={ep.pick.element} ep={ep} />
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <AuthGate startingXI={startingXI} />
+      )}
     </section>
   )
 }
