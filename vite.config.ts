@@ -2,6 +2,7 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import siteConfiguration from './.figma/make/site.json'
 
@@ -19,6 +20,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
+      fplApiPlugin(),
       figmaSiteConfiguration(siteConfiguration),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
@@ -41,6 +43,95 @@ export default defineConfig(({ mode }) => {
     },
   }
 })
+
+/** Proxies FPL API requests to avoid CORS and caches slow-changing endpoints. */
+function fplApiPlugin(): Plugin {
+  const cache = new Map<string, { data: unknown; ts: number }>()
+  const TTL = 30 * 60 * 1000
+
+  function getCached(key: string): unknown | null {
+    const entry = cache.get(key)
+    return entry && Date.now() - entry.ts < TTL ? entry.data : null
+  }
+
+  async function fplFetch(url: string): Promise<unknown> {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; FPLAssistant/1.0)',
+        Accept: 'application/json',
+        Referer: 'https://fantasy.premierleague.com/',
+      },
+    })
+    if (!res.ok) {
+      throw new Error(`FPL API returned ${res.status} for ${url}`)
+    }
+    return res.json()
+  }
+
+  function sendJson(res: ServerResponse, status: number, data: unknown) {
+    const body = JSON.stringify(data)
+    res.writeHead(status, {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(body),
+      'Access-Control-Allow-Origin': '*',
+    })
+    res.end(body)
+  }
+
+  return {
+    name: 'fpl-api',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+        const url = req.url ?? ''
+        if (!url.startsWith('/api/fpl/')) return next()
+
+        const route = url.slice('/api/fpl/'.length).split('?')[0]
+
+        try {
+          if (route === 'bootstrap') {
+            let data = getCached('bootstrap')
+            if (!data) {
+              data = await fplFetch('https://fantasy.premierleague.com/api/bootstrap-static/')
+              cache.set('bootstrap', { data, ts: Date.now() })
+            }
+            return sendJson(res, 200, data)
+          }
+
+          if (route === 'fixtures') {
+            let data = getCached('fixtures')
+            if (!data) {
+              data = await fplFetch('https://fantasy.premierleague.com/api/fixtures/')
+              cache.set('fixtures', { data, ts: Date.now() })
+            }
+            return sendJson(res, 200, data)
+          }
+
+          const playerMatch = route.match(/^player\/(\d+)$/)
+          if (playerMatch) {
+            const data = await fplFetch(
+              `https://fantasy.premierleague.com/api/element-summary/${playerMatch[1]}/`,
+            )
+            return sendJson(res, 200, data)
+          }
+
+          const teamMatch = route.match(/^team\/(\d+)\/(\d+)$/)
+          if (teamMatch) {
+            const data = await fplFetch(
+              `https://fantasy.premierleague.com/api/entry/${teamMatch[1]}/event/${teamMatch[2]}/picks/`,
+            )
+            return sendJson(res, 200, data)
+          }
+
+          return sendJson(res, 404, { error: 'Unknown FPL API route' })
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Unknown error'
+          return sendJson(res, 502, { error: message })
+        }
+      })
+    },
+  }
+}
 
 type FigmaSiteConfiguration = {
   title?: string
