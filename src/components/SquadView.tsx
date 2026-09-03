@@ -1,6 +1,8 @@
 import { Link } from "react-router"
+import { useState } from "react"
 import type { EnrichedPick, SquadData } from "../types"
 import { Jersey, Crest } from "./FplImages"
+import TransferSuggestions from "./TransferSuggestions"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -481,39 +483,102 @@ function AuthGate({ startingXI }: { startingXI: EnrichedPick[] }) {
 
 // ── Squad View ────────────────────────────────────────────────────────────────
 
+// ── Free transfers stepper ────────────────────────────────────────────────────
+
+function FreeTransfersStepper({
+  value,
+  onChange,
+}: {
+  value: number
+  onChange: (n: number) => void
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <label className="text-ink-2 text-sm">Free transfers</label>
+      <div className="flex items-center border border-line rounded-lg overflow-hidden bg-surface">
+        <button
+          onClick={() => onChange(Math.max(0, value - 1))}
+          disabled={value <= 0}
+          className="w-9 h-9 flex items-center justify-center text-ink-2 hover:text-ink hover:bg-surface-2 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-lg leading-none"
+          aria-label="Decrease"
+        >
+          &minus;
+        </button>
+        <span
+          className="w-8 text-center text-ink"
+          style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "20px" }}
+        >
+          {value}
+        </span>
+        <button
+          onClick={() => onChange(Math.min(5, value + 1))}
+          disabled={value >= 5}
+          className="w-9 h-9 flex items-center justify-center text-ink-2 hover:text-ink hover:bg-surface-2 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-lg leading-none"
+          aria-label="Increase"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Squad View ────────────────────────────────────────────────────────────────
+
 export default function SquadView({ squadData, isAuthenticated }: { squadData: SquadData; isAuthenticated: boolean }) {
   const { gameweek, startingXI, bench, predictedScore } = squadData
+  const [freeTransfers, setFreeTransfers] = useState(2)
 
   return (
-    <section className="max-w-5xl mx-auto px-5 pb-24">
-      <ScoreBanner predictedScore={predictedScore} gameweek={gameweek} />
+    <>
+      <section className="max-w-5xl mx-auto px-5 pb-10">
+        <ScoreBanner predictedScore={predictedScore} gameweek={gameweek} />
 
-      {isAuthenticated ? (
+        {isAuthenticated ? (
+          <>
+            {/* Free transfers control */}
+            <div className="flex items-center justify-between mb-6">
+              <FreeTransfersStepper value={freeTransfers} onChange={setFreeTransfers} />
+              <span className="text-ink-3 text-xs hidden sm:block">
+                £{(squadData.bank / 10).toFixed(1)}m in bank
+              </span>
+            </div>
+
+            {/* Starting XI */}
+            <div className="mb-8">
+              <SectionDivider label="Starting XI" count={startingXI.length} />
+              <div className="hidden sm:block">
+                <PitchFormation startingXI={startingXI} />
+              </div>
+              <div className="block sm:hidden">
+                <MobileListView startingXI={startingXI} />
+              </div>
+            </div>
+
+            {/* Bench */}
+            <div>
+              <SectionDivider label="Bench" count={bench.length} />
+              <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center">
+                {bench.map(ep => (
+                  <BenchCard key={ep.pick.element} ep={ep} />
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <AuthGate startingXI={startingXI} />
+        )}
+      </section>
+
+      {/* Transfer suggestions — authenticated only, below squad */}
+      {isAuthenticated && (
         <>
-          {/* Starting XI */}
-          <div className="mb-8">
-            <SectionDivider label="Starting XI" count={startingXI.length} />
-            <div className="hidden sm:block">
-              <PitchFormation startingXI={startingXI} />
-            </div>
-            <div className="block sm:hidden">
-              <MobileListView startingXI={startingXI} />
-            </div>
+          <div className="max-w-5xl mx-auto px-5">
+            <div className="h-px bg-line mb-8" />
           </div>
-
-          {/* Bench */}
-          <div>
-            <SectionDivider label="Bench" count={bench.length} />
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center">
-              {bench.map(ep => (
-                <BenchCard key={ep.pick.element} ep={ep} />
-              ))}
-            </div>
-          </div>
+          <TransferSuggestions squadData={squadData} freeTransfers={freeTransfers} />
         </>
-      ) : (
-        <AuthGate startingXI={startingXI} />
       )}
-    </section>
+    </>
   )
 }

@@ -150,4 +150,7 @@ export interface SquadData {
   startingXI: EnrichedPick[]
   bench: EnrichedPick[]
   predictedScore: number
+  bank: number        // tenths of millions (e.g. 23 = £2.3m)
+  allPlayers: FplElement[]
+  allTeams: FplTeam[]
 }

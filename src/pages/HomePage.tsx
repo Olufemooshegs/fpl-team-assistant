@@ -238,6 +238,9 @@ export default function HomePage() {
           startingXI,
           bench,
           predictedScore: Math.round(rawScore * 10) / 10,
+          bank: teamPicks.entry_history.bank,
+          allPlayers: bootstrap.elements,
+          allTeams: bootstrap.teams,
         },
       })
     } catch (err) {
