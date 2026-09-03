@@ -2,22 +2,174 @@
 
 @import 'tailwindcss';
 
-@theme {
-  --color-fpl-purple: #37003c;
-  --color-fpl-purple-light: #4a0550;
-  --color-fpl-green: #00ff87;
-  --color-fpl-green-dim: #00cc6a;
-  --color-navy: #0d0d1a;
-  --color-navy-card: #13132a;
-  --color-navy-elevated: #1a1a35;
-  --color-navy-border: #2a2a50;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a0a8c0;
-  --color-text-muted: #606888;
+/* ── Semantic color variables ─────────────────────────────────────────────── */
 
-  --font-rajdhani: "Rajdhani", sans-serif;
-  --font-dm-sans: "DM Sans", sans-serif;
+:root {
+  /* Surfaces */
+  --c-surface:          #f4f7fb;
+  --c-surface-card:     #ffffff;
+  --c-surface-elevated: #edf1f8;
+  --c-surface-input:    #f4f7fb;
+
+  /* Borders */
+  --c-border:       rgba(15, 30, 60, 0.10);
+  --c-border-strong: rgba(15, 30, 60, 0.20);
+
+  /* Text */
+  --c-ink:           #0f1929;
+  --c-ink-secondary: #4a5568;
+  --c-ink-muted:     #8fa0b1;
+
+  /* Accent — sports-analytics blue */
+  --c-accent:        #1a56db;
+  --c-accent-hover:  #1447c0;
+  --c-accent-fg:     #ffffff;
+  --c-accent-subtle: #eef4ff;
+
+  /* Positive / green */
+  --c-positive:        #16a34a;
+  --c-positive-subtle: #f0fdf4;
+  --c-positive-fg:     #15803d;
+
+  /* Warning / orange */
+  --c-warning:        #d97706;
+  --c-warning-subtle: #fffbeb;
+
+  /* Danger / red */
+  --c-danger:        #dc2626;
+  --c-danger-subtle: #fef2f2;
+
+  /* Position pills — light */
+  --c-pos-gk-text:  #92400e;
+  --c-pos-gk-bg:    #fef3c7;
+  --c-pos-def-text: #075985;
+  --c-pos-def-bg:   #e0f2fe;
+  --c-pos-mid-text: #065f46;
+  --c-pos-mid-bg:   #d1fae5;
+  --c-pos-fwd-text: #9f1239;
+  --c-pos-fwd-bg:   #ffe4e6;
+
+  /* Difficulty badges — light */
+  --c-diff-easy-text: #166534;
+  --c-diff-easy-bg:   #dcfce7;
+  --c-diff-mid-text:  #92400e;
+  --c-diff-mid-bg:    #fef3c7;
+  --c-diff-hard-text: #991b1b;
+  --c-diff-hard-bg:   #fee2e2;
+
+  /* Card shadow (light only) */
+  --c-shadow: 0 1px 3px rgba(15, 30, 60, 0.07), 0 1px 2px rgba(15, 30, 60, 0.05);
 }
+
+html.dark {
+  /* Surfaces */
+  --c-surface:          #0d0d1a;
+  --c-surface-card:     #12122a;
+  --c-surface-elevated: #191932;
+  --c-surface-input:    #191932;
+
+  /* Borders */
+  --c-border:       rgba(255, 255, 255, 0.08);
+  --c-border-strong: rgba(255, 255, 255, 0.15);
+
+  /* Text */
+  --c-ink:           #eef1f8;
+  --c-ink-secondary: #9faabf;
+  --c-ink-muted:     #5a6480;
+
+  /* Accent */
+  --c-accent:        #4d7fff;
+  --c-accent-hover:  #3366f0;
+  --c-accent-fg:     #ffffff;
+  --c-accent-subtle: rgba(77, 127, 255, 0.12);
+
+  /* Positive */
+  --c-positive:        #22c55e;
+  --c-positive-subtle: rgba(34, 197, 94, 0.10);
+  --c-positive-fg:     #22c55e;
+
+  /* Warning */
+  --c-warning:        #f59e0b;
+  --c-warning-subtle: rgba(245, 158, 11, 0.10);
+
+  /* Danger */
+  --c-danger:        #f87171;
+  --c-danger-subtle: rgba(248, 113, 113, 0.10);
+
+  /* Position pills — dark */
+  --c-pos-gk-text:  #fbbf24;
+  --c-pos-gk-bg:    rgba(251, 191, 36, 0.12);
+  --c-pos-def-text: #38bdf8;
+  --c-pos-def-bg:   rgba(56, 189, 248, 0.12);
+  --c-pos-mid-text: #34d399;
+  --c-pos-mid-bg:   rgba(52, 211, 153, 0.12);
+  --c-pos-fwd-text: #fb7185;
+  --c-pos-fwd-bg:   rgba(251, 113, 133, 0.12);
+
+  /* Difficulty badges — dark */
+  --c-diff-easy-text: #4ade80;
+  --c-diff-easy-bg:   rgba(74, 222, 128, 0.12);
+  --c-diff-mid-text:  #fbbf24;
+  --c-diff-mid-bg:    rgba(251, 191, 36, 0.12);
+  --c-diff-hard-text: #f87171;
+  --c-diff-hard-bg:   rgba(248, 113, 113, 0.12);
+
+  /* No shadow in dark mode */
+  --c-shadow: none;
+}
+
+/* ── Tailwind theme tokens ────────────────────────────────────────────────── */
+
+@theme {
+  --color-surface:          var(--c-surface);
+  --color-surface-card:     var(--c-surface-card);
+  --color-surface-elevated: var(--c-surface-elevated);
+  --color-surface-input:    var(--c-surface-input);
+  --color-app-border:       var(--c-border);
+  --color-app-border-strong: var(--c-border-strong);
+  --color-ink:              var(--c-ink);
+  --color-ink-secondary:    var(--c-ink-secondary);
+  --color-ink-muted:        var(--c-ink-muted);
+  --color-accent:           var(--c-accent);
+  --color-accent-hover:     var(--c-accent-hover);
+  --color-accent-fg:        var(--c-accent-fg);
+  --color-accent-subtle:    var(--c-accent-subtle);
+  --color-positive:         var(--c-positive);
+  --color-positive-subtle:  var(--c-positive-subtle);
+  --color-positive-fg:      var(--c-positive-fg);
+  --color-warning:          var(--c-warning);
+  --color-warning-subtle:   var(--c-warning-subtle);
+  --color-danger:           var(--c-danger);
+  --color-danger-subtle:    var(--c-danger-subtle);
+
+  /* Position pills */
+  --color-pos-gk-text:  var(--c-pos-gk-text);
+  --color-pos-gk-bg:    var(--c-pos-gk-bg);
+  --color-pos-def-text: var(--c-pos-def-text);
+  --color-pos-def-bg:   var(--c-pos-def-bg);
+  --color-pos-mid-text: var(--c-pos-mid-text);
+  --color-pos-mid-bg:   var(--c-pos-mid-bg);
+  --color-pos-fwd-text: var(--c-pos-fwd-text);
+  --color-pos-fwd-bg:   var(--c-pos-fwd-bg);
+
+  /* Difficulty badges */
+  --color-diff-easy-text: var(--c-diff-easy-text);
+  --color-diff-easy-bg:   var(--c-diff-easy-bg);
+  --color-diff-mid-text:  var(--c-diff-mid-text);
+  --color-diff-mid-bg:    var(--c-diff-mid-bg);
+  --color-diff-hard-text: var(--c-diff-hard-text);
+  --color-diff-hard-bg:   var(--c-diff-hard-bg);
+
+  /* Static (same in both modes) */
+  --color-header:        #1e3a5f;
+  --color-header-border: #2a4f80;
+
+  /* Font families */
+  --font-rajdhani: "Rajdhani", sans-serif;
+  --font-dm-sans:  "DM Sans", sans-serif;
+}
+
+/* ── Base styles ──────────────────────────────────────────────────────────── */
 
 html,
 body,
@@ -27,17 +179,19 @@ body,
 
 body {
   font-family: var(--font-dm-sans);
-  background-color: var(--color-navy);
-  color: var(--color-text-primary);
+  background-color: var(--c-surface);
+  color: var(--c-ink);
 }
 
-::-webkit-scrollbar {
-  width: 6px;
+/* Card shadow utility (uses CSS var so it disappears in dark mode) */
+.shadow-card {
+  box-shadow: var(--c-shadow);
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-navy-border);
+  background: var(--c-border-strong);
   border-radius: 3px;
 }

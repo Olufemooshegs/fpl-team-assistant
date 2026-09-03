@@ -103,6 +103,11 @@ export interface PlayerHistoryEntry {
   saves: number
   bonus: number
   bps: number
+  // Defensive action stats (confirmed present in FPL API as of 2025-26)
+  defensive_contribution: number
+  clearances_blocks_interceptions: number
+  recoveries: number
+  tackles: number
 }
 
 export interface PlayerSummaryResponse {

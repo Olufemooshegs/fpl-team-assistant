@@ -11,6 +11,14 @@ import type {
 // element_type 2=DEF, 3=MID receive the defensive contribution bonus
 const DEFENSIVE_TYPES = new Set([2, 3])
 
+// FPL API "defensive_contribution" thresholds per position type
+// (confirmed field name: the API exposes `defensive_contribution` directly
+//  alongside `clearances_blocks_interceptions`, `recoveries`, and `tackles`)
+const DEF_CONTRIB_THRESHOLD: Record<number, number> = {
+  2: 10, // DEF
+  3: 12, // MID
+}
+
 const DIFFICULTY_MULT: Record<number, number> = {
   1: 1.15,
   2: 1.15,
@@ -18,6 +26,9 @@ const DIFFICULTY_MULT: Record<number, number> = {
   4: 0.85,
   5: 0.7,
 }
+
+// Log field names once on first player processed for console verification
+let _fieldsLogged = false
 
 function diffMult(d: number): number {
   return DIFFICULTY_MULT[Math.max(1, Math.min(5, d))] ?? 1.0
@@ -77,11 +88,26 @@ export interface PredictionParams {
  *   1. Weighted recent form (or season PPG fallback)
  *   2. Fixture difficulty + home advantage
  *   3. Minutes reliability discount
- *   4. Defensive contribution bonus (DEF/MID with 3+ CS in last 5 GWs)
+ *   4. Defensive contribution bonus — uses the API's `defensive_contribution`
+ *      field (confirmed present; threshold: DEF ≥10, MID ≥12)
  */
 export function calculatePrediction(params: PredictionParams): PlayerPrediction {
   const { element, summary, fixtures, nextEventId } = params
   const history = summary.history
+
+  // Log field names on first invocation so the console shows the real API shape
+  if (!_fieldsLogged && history.length > 0) {
+    _fieldsLogged = true
+    console.log("[FPL Prediction] History entry field names:", Object.keys(history[0]))
+    console.log(
+      "[FPL Prediction] Sample entry (defensive fields):",
+      Object.fromEntries(
+        Object.entries(history[0]).filter(([k]) =>
+          ["defensive_contribution", "clearances_blocks_interceptions", "recoveries", "tackles", "clean_sheets", "bps", "bonus"].includes(k),
+        ),
+      ),
+    )
+  }
 
   // Step 1 – base score
   const baseRaw =
@@ -112,12 +138,15 @@ export function calculatePrediction(params: PredictionParams): PlayerPrediction 
     if (avgMins < 60) score *= 0.8
   }
 
-  // Step 4 – defensive contribution bonus
-  // The FPL API exposes `clean_sheets` (1 when player kept a CS, 0 otherwise)
-  // as the closest analogue to "defensive contribution" in the history array.
+  // Step 4 – defensive contribution bonus (DEF=2, MID=3)
+  // Uses the API's `defensive_contribution` field (a composite score covering
+  // clearances, blocks, interceptions, tackles, and recoveries).
+  // Threshold: DEF ≥10, MID ≥12 per FPL scoring rules.
   if (DEFENSIVE_TYPES.has(element.element_type) && history.length >= 5) {
-    const defContributions = history.slice(-5).filter(h => h.clean_sheets >= 1).length
-    if (defContributions >= 3) score += 1.5
+    const threshold = DEF_CONTRIB_THRESHOLD[element.element_type] ?? 10
+    const last5 = history.slice(-5)
+    const contributions = last5.filter(h => h.defensive_contribution >= threshold).length
+    if (contributions >= 3) score += 1.5
   }
 
   const epNextRaw = element.ep_next !== null ? parseFloat(element.ep_next) : null
