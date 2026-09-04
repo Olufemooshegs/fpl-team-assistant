@@ -84,9 +84,11 @@ function fplApiPlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
         const url = req.url ?? ''
-        if (!url.startsWith('/api/fpl/')) return next()
+        const apiPrefix = '/api/fpl/'
+        const apiIndex = url.indexOf(apiPrefix)
+        if (apiIndex === -1) return next()
 
-        const route = url.slice('/api/fpl/'.length).split('?')[0]
+        const route = url.slice(apiIndex + apiPrefix.length).split('?')[0]
 
         try {
           if (route === 'bootstrap') {
