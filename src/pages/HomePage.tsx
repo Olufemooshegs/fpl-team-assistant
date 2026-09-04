@@ -22,8 +22,17 @@ type AppPhase =
   | { phase: "error"; message: string }
   | { phase: "loaded"; squadData: SquadData }
 
+function fplApiUrl(path: string): string {
+  return `${import.meta.env.BASE_URL}api/fpl/${path}`
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url)
+  const contentType = res.headers.get("content-type") ?? ""
+  if (!contentType.includes("application/json")) {
+    throw new Error("FPL data service returned an unexpected response. Please try again.")
+  }
+
   const json = await res.json()
   if (!res.ok) {
     throw new Error((json as ApiError).error ?? `Request failed: ${res.status}`)
@@ -192,8 +201,8 @@ export default function HomePage() {
 
     try {
       const [bootstrap, fixtures] = await Promise.all([
-        fetchJson<BootstrapResponse>("/api/fpl/bootstrap"),
-        fetchJson<FplFixture[]>("/api/fpl/fixtures"),
+        fetchJson<BootstrapResponse>(fplApiUrl("bootstrap")),
+        fetchJson<FplFixture[]>(fplApiUrl("fixtures")),
       ])
 
       const currentEvent = bootstrap.events.find(e => e.is_current)
@@ -203,14 +212,14 @@ export default function HomePage() {
       setAppPhase({ phase: "loading", message: `Loading GW${gameweek} squad...` })
 
       const teamPicks = await fetchJson<TeamPicksResponse>(
-        `/api/fpl/team/${teamId}/${gameweek}`,
+        fplApiUrl(`team/${teamId}/${gameweek}`),
       )
 
       setAppPhase({ phase: "loading", message: `Analysing ${teamPicks.picks.length} players...` })
 
       const summaries = await Promise.all(
         teamPicks.picks.map(pick =>
-          fetchJson<PlayerSummaryResponse>(`/api/fpl/player/${pick.element}`),
+          fetchJson<PlayerSummaryResponse>(fplApiUrl(`player/${pick.element}`)),
         ),
       )
 
