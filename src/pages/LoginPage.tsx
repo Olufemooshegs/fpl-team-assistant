@@ -111,25 +111,34 @@ export default function LoginPage() {
   if (loading) return null
 
   return (
-    <div className="min-h-[calc(100vh-120px)] flex items-center justify-center px-5 py-12">
-      <div className="w-full max-w-sm">
+    <div className="min-h-[calc(100vh-120px)] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      
+      {/* Background radial glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md relative z-10">
 
         {/* Card */}
-        <div className="bg-surface border border-line rounded-2xl p-8">
+        <div className="bg-surface/90 border border-line rounded-2xl p-8 sm:p-10 shadow-2xl backdrop-blur-xl">
 
           {/* Logo mark */}
-          <div className="flex items-center gap-2.5 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8l3.5 3.5L13 4.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 p-0.5 shadow-lg shadow-blue-500/20">
+              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-emerald-400">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
             </div>
-            <span
-              className="text-ink"
-              style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "20px" }}
-            >
-              FPL Team Assistant
-            </span>
+            <div>
+              <span
+                className="text-ink font-bold text-xl tracking-tight leading-none block"
+                style={{ fontFamily: "var(--font-rajdhani)" }}
+              >
+                FPL ENGINE
+              </span>
+              <span className="text-[10px] font-mono text-ink-3 uppercase tracking-wider">Tactical Auth Portal</span>
+            </div>
           </div>
 
           {signupDone ? (

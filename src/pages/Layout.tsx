@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate, useLocation } from "react-router"
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { useAuth } from "../contexts/AuthContext"
+import DeadlineCountdownBar from "../components/DeadlineCountdownBar"
 
 // ── Dark mode ─────────────────────────────────────────────────────────────────
 
@@ -14,6 +15,7 @@ function useDarkMode(): [boolean, () => void] {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark)
+    document.documentElement.classList.toggle("light", !dark)
     localStorage.setItem("fpl-theme", dark ? "dark" : "light")
   }, [dark])
 
@@ -74,49 +76,74 @@ function Header({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
     "Account"
 
   return (
-    <header className="bg-nav border-b sticky top-0 z-10" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
-      <div className="max-w-5xl mx-auto px-5 py-3 flex items-center gap-3">
-        <Link to="/" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8l3.5 3.5L13 4.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <span
-            className="text-white hidden sm:block"
-            style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "22px" }}
-          >
-            FPL Team Assistant
-          </span>
-          <span
-            className="text-white sm:hidden"
-            style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "20px" }}
-          >
-            FPL Assist
-          </span>
-        </Link>
+    <header className="sticky top-0 z-50 glass-panel border-b border-line">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        
+        {/* Brand logo & Live status pill */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-emerald-500 p-0.5 shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
+              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-emerald-400">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-ink font-bold tracking-tight text-lg sm:text-xl leading-none"
+                  style={{ fontFamily: "var(--font-rajdhani)" }}
+                >
+                  FPL ENGINE
+                </span>
+                <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-extrabold tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
+                  v2.4
+                </span>
+              </div>
+              <p className="text-[10px] text-ink-3 tracking-wider font-medium hidden sm:block">AI GAMWEEK PREDICTOR</p>
+            </div>
+          </Link>
 
-        <div className="ml-auto flex items-center gap-2">
+          {/* Engine indicator */}
+          <div className="hidden lg:flex items-center gap-2 pl-3 border-l border-line text-xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-ink-2 text-[11px] font-mono">LIVE PREDICTION MATRIX</span>
+          </div>
+        </div>
+
+        {/* Right tools */}
+        <div className="flex items-center gap-2.5">
           {/* Auth control */}
           {user ? (
             <div className="relative">
               <button
                 onClick={e => { e.stopPropagation(); setDropdownOpen(prev => !prev) }}
-                className="flex items-center gap-1.5 text-white/80 hover:text-white text-sm transition-colors cursor-pointer px-2 py-1.5 rounded-lg hover:bg-white/10"
+                className="flex items-center gap-2 text-ink hover:text-white text-xs font-semibold transition-all cursor-pointer px-3 py-1.5 rounded-xl bg-surface-2 border border-line hover:border-primary/40 shadow-sm"
               >
-                <span className="max-w-[120px] truncate">{displayName}</span>
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-400 flex items-center justify-center text-[10px] font-bold text-slate-950 uppercase">
+                  {displayName.charAt(0)}
+                </div>
+                <span className="max-w-[100px] sm:max-w-[140px] truncate">{displayName}</span>
                 <ChevronDownIcon />
               </button>
               {dropdownOpen && (
                 <div
-                  className="absolute right-0 top-full mt-2 w-52 bg-surface border border-line rounded-xl overflow-hidden z-20"
+                  className="absolute right-0 top-full mt-2 w-56 bg-surface border border-line rounded-xl overflow-hidden shadow-2xl z-50 p-1"
                   onClick={e => e.stopPropagation()}
                 >
-                  <p className="px-4 py-3 text-ink-3 text-xs truncate border-b border-line">{user.email}</p>
+                  <div className="px-3 py-2.5 bg-surface-2/50 rounded-lg mb-1">
+                    <p className="text-ink font-semibold text-xs truncate">{displayName}</p>
+                    <p className="text-ink-3 text-[11px] font-mono truncate">{user.email}</p>
+                  </div>
                   <button
                     onClick={handleSignOut}
-                    className="w-full px-4 py-3 text-ink-2 text-sm text-left hover:text-ink hover:bg-surface-2 transition-colors cursor-pointer"
+                    className="w-full px-3 py-2 text-red-400 text-xs font-medium text-left hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer flex items-center gap-2"
                   >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                     Sign out
                   </button>
                 </div>
@@ -125,16 +152,16 @@ function Header({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
           ) : (
             <Link
               to="/login"
-              className="text-white/70 hover:text-white text-sm transition-colors px-2 py-1.5"
+              className="text-ink-2 hover:text-ink text-xs font-semibold transition-colors px-3 py-1.5 rounded-xl hover:bg-surface-2"
             >
               Sign in
             </Link>
           )}
 
-          {/* Dark mode toggle */}
+          {/* Theme toggle */}
           <button
             onClick={onToggle}
-            className="w-11 h-11 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+            className="w-9 h-9 rounded-xl border border-line bg-surface-2/60 flex items-center justify-center text-ink-2 hover:text-ink hover:border-primary/40 transition-all cursor-pointer"
             aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
           >
             {dark ? <SunIcon /> : <MoonIcon />}
@@ -159,6 +186,7 @@ export default function Layout() {
   return (
     <div className="min-h-full flex flex-col bg-base">
       <Header dark={dark} onToggle={toggleDark} />
+      <DeadlineCountdownBar />
       <main className="flex-1">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

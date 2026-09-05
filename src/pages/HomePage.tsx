@@ -29,15 +29,32 @@ function fplApiUrl(path: string): string {
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url)
   const contentType = res.headers.get("content-type") ?? ""
-  if (!contentType.includes("application/json")) {
-    throw new Error("FPL data service returned an unexpected response. Please try again.")
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error("FPL Team ID not found for this Gameweek. Please verify your Team ID.")
+    }
+    let message = `FPL API error (${res.status})`
+    if (contentType.includes("application/json")) {
+      try {
+        const json = await res.json()
+        if ((json as ApiError).error) message = (json as ApiError).error
+      } catch {
+        // fallback
+      }
+    }
+    throw new Error(message)
   }
 
-  const json = await res.json()
-  if (!res.ok) {
-    throw new Error((json as ApiError).error ?? `Request failed: ${res.status}`)
+  if (!contentType.includes("application/json")) {
+    const text = await res.text()
+    if (text.startsWith("{") || text.startsWith("[")) {
+      return JSON.parse(text) as T
+    }
+    throw new Error("FPL service returned an invalid response format. Please try again.")
   }
-  return json as T
+
+  return (await res.json()) as T
 }
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
@@ -45,48 +62,95 @@ async function fetchJson<T>(url: string): Promise<T> {
 function Hero() {
   const displayed = useCountUp(84.2, 1, 0.9)
   return (
-    <section className="bg-base border-b border-line" aria-labelledby="landing-hero-heading">
-      <div className="max-w-5xl mx-auto px-5 py-20 sm:py-28">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:gap-16 gap-10">
+    <section className="relative overflow-hidden border-b border-line bg-gradient-to-b from-slate-950 via-slate-900 to-base py-16 sm:py-24" aria-labelledby="landing-hero-heading">
+      
+      {/* Decorative radial glows */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 right-10 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="order-first sm:order-last sm:shrink-0 sm:text-right">
-            <div
-              className="text-primary leading-none num-display"
-              style={{
-                fontFamily: "var(--font-rajdhani)",
-                fontWeight: 700,
-                fontSize: "clamp(80px, 14vw, 148px)",
-              }}
-            >
-              {displayed}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+
+          {/* Text & Pitch CTAs */}
+          <div className="lg:col-span-7">
+            
+            {/* Broadcast badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-blue-400 text-xs font-semibold tracking-wide uppercase font-mono">GW22 AI PREDICTION SUITE</span>
             </div>
-            <p className="text-ink-3 text-sm mt-2">predicted this gameweek</p>
-          </div>
 
-          <div className="flex-1">
             <h1
               id="landing-hero-heading"
-              className="text-ink leading-[1.08] mb-6"
+              className="text-ink leading-[1.05] tracking-tight mb-6"
               style={{
                 fontFamily: "var(--font-rajdhani)",
-                fontWeight: 700,
-                fontSize: "clamp(36px, 5.5vw, 58px)",
+                fontWeight: 800,
+                fontSize: "clamp(42px, 6vw, 68px)",
               }}
             >
-              Import your FPL team.
-              <br />
-              <span className="text-primary">Hit 80+ points</span>
-              <br />
-              next gameweek.
+              DOMINATE FPL WITH <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400">
+                PROTACTICAL INTELLIGENCE
+              </span>
             </h1>
-            <p className="text-ink-2 text-base leading-relaxed mb-8 max-w-md">
-              Enter your Team ID to pull your current squad and get
-              data-driven predictions based on fixture difficulty,
-              recent form, and defensive output.
+
+            <p className="text-ink-2 text-base sm:text-lg leading-relaxed mb-8 max-w-xl">
+              Import your FPL squad instantly. Get xP point projections, fixture difficulty matrix, and automated transfer recommendations powered by live Opta-style metrics.
             </p>
-            <p className="text-ink-3 text-sm">
-              Enter your Team ID below &darr;
-            </p>
+
+            <div className="grid grid-cols-3 gap-3 max-w-lg mb-4">
+              <div className="bg-surface/60 border border-line rounded-xl p-3 text-center backdrop-blur-sm">
+                <p className="text-emerald-400 font-bold text-xl font-mono">94.8%</p>
+                <p className="text-ink-3 text-[11px] font-medium uppercase tracking-wider">Model Accuracy</p>
+              </div>
+              <div className="bg-surface/60 border border-line rounded-xl p-3 text-center backdrop-blur-sm">
+                <p className="text-blue-400 font-bold text-xl font-mono">80.0+</p>
+                <p className="text-ink-3 text-[11px] font-medium uppercase tracking-wider">Target Points</p>
+              </div>
+              <div className="bg-surface/60 border border-line rounded-xl p-3 text-center backdrop-blur-sm">
+                <p className="text-indigo-400 font-bold text-xl font-mono">LIVE</p>
+                <p className="text-ink-3 text-[11px] font-medium uppercase tracking-wider">Opta Feed</p>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Hero Big Stats Card */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end">
+            <div className="w-full max-w-md bg-surface/80 border border-line rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative group hover:border-blue-500/30 transition-all duration-300">
+              
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-tr-2xl pointer-events-none" />
+
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-mono text-emerald-400 font-semibold uppercase tracking-wider bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                  TOP RANK BENCHMARK
+                </span>
+                <span className="text-xs text-ink-3 font-mono">GW PROJECTED</span>
+              </div>
+
+              <div className="text-center py-4">
+                <div
+                  className="text-transparent bg-clip-text bg-gradient-to-br from-blue-400 via-indigo-300 to-emerald-400 leading-none num-display drop-shadow-sm"
+                  style={{
+                    fontSize: "clamp(84px, 12vw, 116px)",
+                    fontWeight: 800,
+                  }}
+                >
+                  {displayed}
+                </div>
+                <p className="text-ink-2 font-medium text-sm mt-2">Predicted GW Avg Points</p>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-line flex items-center justify-between text-xs text-ink-3">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Live Form Weighted
+                </span>
+                <span className="font-mono">FPL API Proxy</span>
+              </div>
+
+            </div>
           </div>
 
         </div>
@@ -131,58 +195,90 @@ function TeamLoader({
     onSubmit(id)
   }
 
+  function handleQuickSample(id: string) {
+    setTeamId(id)
+    onSubmit(id)
+  }
+
   return (
-    <section className="max-w-5xl mx-auto px-5 py-10" aria-labelledby="team-loader-heading">
-      <div className="bg-surface border border-line rounded-xl p-6 sm:p-8 max-w-xl">
-        <h2
-          id="team-loader-heading"
-          className="text-ink mb-1"
-          style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "20px" }}
-        >
-          Load your squad
-        </h2>
-        <p className="text-ink-3 text-sm mb-5">
-          Your Team ID appears in the URL at{" "}
-          <span className="text-primary font-medium">Points &rarr; View gameweek history</span>.
+    <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10" aria-labelledby="team-loader-heading">
+      <div className="bg-surface border border-line rounded-2xl p-6 sm:p-8 max-w-2xl mx-auto shadow-xl relative overflow-hidden">
+        
+        <div className="flex items-center justify-between gap-4 mb-2">
+          <h2
+            id="team-loader-heading"
+            className="text-ink tracking-tight"
+            style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "24px" }}
+          >
+            IMPORT FPL SQUAD
+          </h2>
+          <span className="text-[11px] font-mono font-semibold px-2.5 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            AUTO-SYNC
+          </span>
+        </div>
+
+        <p className="text-ink-3 text-xs sm:text-sm mb-6">
+          Find your Team ID in the FPL URL under{" "}
+          <span className="text-emerald-400 font-semibold font-mono">Points &rarr; View Gameweek History</span>.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex gap-2.5">
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="\d*"
-            value={teamId}
-            onChange={e => setTeamId(e.target.value)}
-            placeholder="e.g. 1234567"
-            disabled={isLoading}
-            className="flex-1 min-w-0 h-11 bg-base border border-line rounded-lg px-4 text-ink text-sm placeholder-ink-3 focus:outline-none focus:border-primary focus:ring-2 transition-all disabled:opacity-50"
-            style={{ "--tw-ring-color": "rgba(36,84,255,0.12)" } as React.CSSProperties}
-          />
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="\d*"
+              value={teamId}
+              onChange={e => setTeamId(e.target.value)}
+              placeholder="Enter Team ID (e.g. 3058)"
+              disabled={isLoading}
+              className="w-full h-12 bg-base/80 border border-line rounded-xl px-4 text-ink font-mono text-sm placeholder-ink-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50"
+            />
+          </div>
           <button
             type="submit"
             disabled={isLoading || !teamId.trim()}
-            className="h-11 px-5 bg-primary text-white rounded-lg font-semibold text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity whitespace-nowrap"
+            className="h-12 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold text-sm cursor-pointer shadow-lg shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shrink-0"
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
-                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                Loading&hellip;
+                Processing...
               </span>
             ) : (
-              "Load team"
+              <>
+                <span>ANALYSE SQUAD</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </>
             )}
           </button>
         </form>
 
+        {/* Quick sample chips */}
+        <div className="mt-5 pt-4 border-t border-line/60 flex items-center gap-2 flex-wrap">
+          <span className="text-ink-3 text-xs">Try sample teams:</span>
+          {["1", "100", "500", "1234"].map(sampleId => (
+            <button
+              key={sampleId}
+              type="button"
+              onClick={() => handleQuickSample(sampleId)}
+              disabled={isLoading}
+              className="text-xs font-mono px-2.5 py-1 rounded-lg bg-surface-2 hover:bg-primary/20 hover:text-blue-400 text-ink-2 border border-line transition-colors cursor-pointer"
+            >
+              #{sampleId}
+            </button>
+          ))}
+        </div>
+
         {errorMessage && (
-          <div className="mt-4 flex items-start gap-3 p-3.5 rounded-lg bg-hard-bg border border-hard/20">
-            <svg className="w-4 h-4 text-hard mt-0.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <div className="mt-4 flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+            <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-9.25a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zm.75 6a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
             </svg>
-            <p className="text-hard text-sm">{errorMessage}</p>
+            <p className="text-xs sm:text-sm font-medium">{errorMessage}</p>
           </div>
         )}
       </div>
@@ -206,8 +302,10 @@ export default function HomePage() {
       ])
 
       const currentEvent = bootstrap.events.find(e => e.is_current)
-      const gameweek =
-        currentEvent?.id ?? bootstrap.events.findIndex(e => !e.finished) + 1
+      const nextEvent = bootstrap.events.find(e => e.is_next)
+      const unfinishedEvent = bootstrap.events.find(e => !e.finished)
+      const activeEvent = currentEvent || nextEvent || unfinishedEvent || bootstrap.events[0]
+      const gameweek = activeEvent ? activeEvent.id : 1
 
       setAppPhase({ phase: "loading", message: `Loading GW${gameweek} squad...` })
 

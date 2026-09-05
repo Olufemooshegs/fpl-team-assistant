@@ -117,7 +117,7 @@ function DeltaBadge({
 
 function SingleSwapCard({ swap, hitCost }: { swap: SingleSwap; hitCost: number }) {
   return (
-    <div className="bg-surface border border-line rounded-xl p-5 hover:border-primary/25 transition-colors duration-150">
+    <div className="bg-surface border border-line rounded-2xl p-5 hover:border-blue-500/40 transition-all duration-200 shadow-lg hover:shadow-blue-500/10">
       <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
         <PlayerChip
           name={swap.outPick.element.web_name}
@@ -339,9 +339,11 @@ function CardList({
 export default function TransferSuggestions({
   squadData,
   freeTransfers,
+  injectedSwap = null,
 }: {
   squadData: SquadData
   freeTransfers: number
+  injectedSwap?: SingleSwap | null
 }) {
   const [activeTab, setActiveTab] = useState<"free" | "hits">("free")
 
@@ -376,23 +378,43 @@ export default function TransferSuggestions({
   // Determine if there's anything to show in each tab
   const hasFreeContent = freeSingles.length > 0 || (comboIsFree && comboIsWorthIt)
   const hasHitContent = hitSingles.length > 0 || (!comboIsFree && comboIsWorthIt)
-  const hasAnything = hasFreeContent || hasHitContent
+  const hasAnything = hasFreeContent || hasHitContent || !!injectedSwap
 
   return (
-    <section className="max-w-5xl mx-auto px-5 pb-20">
+    <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-12" id="transfer-suggestions">
       {/* Section header */}
       <div className="flex items-center gap-3 mb-6">
         <span
-          className="text-ink"
-          style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "22px" }}
+          className="text-ink font-bold tracking-tight text-2xl sm:text-3xl"
+          style={{ fontFamily: "var(--font-rajdhani)" }}
         >
-          Suggested transfers
+          SUGGESTED TRANSFERS
         </span>
         <div className="flex-1 h-px bg-line" />
-        <span className="text-ink-3 text-xs">
-          {price(squadData.bank)} in bank
+        <span className="text-ink-3 text-xs font-mono font-bold">
+          {price(squadData.bank)} IN BANK
         </span>
       </div>
+
+      {/* Injected Swap from Comparison Tool */}
+      {injectedSwap && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border-2 border-blue-500/80 shadow-2xl relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="px-3 py-1 rounded-lg bg-blue-500 text-white font-extrabold text-[11px] font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-md">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Suggested from comparison
+            </span>
+            <span className="text-xs font-mono text-blue-300 font-bold">
+              Manual Position Evaluation
+            </span>
+          </div>
+          <SingleSwapCard swap={injectedSwap} hitCost={0} />
+        </motion.div>
+      )}
 
       <SummaryBar
         currentScore={squadData.predictedScore}
@@ -412,7 +434,7 @@ export default function TransferSuggestions({
 
           {/* Free transfers tab */}
           {activeTab === "free" && (
-            !hasFreeContent ? (
+            !hasFreeContent && !injectedSwap ? (
               <EmptyState message="No beneficial swaps within your free transfer allowance. Check 'Including hits'." />
             ) : (
               <CardList
@@ -427,7 +449,7 @@ export default function TransferSuggestions({
 
           {/* Including hits tab */}
           {activeTab === "hits" && (
-            !hasHitContent ? (
+            !hasHitContent && !injectedSwap ? (
               <EmptyState message="No additional improvements found beyond your free transfers." />
             ) : (
               <CardList

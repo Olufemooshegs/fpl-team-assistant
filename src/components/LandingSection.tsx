@@ -266,8 +266,8 @@ function SectionWrap({
   label: string
 }) {
   return (
-    <section className={`border-t border-line ${alt ? "bg-surface" : "bg-base"}`} aria-label={label}>
-      <div className="max-w-5xl mx-auto px-5 py-20 sm:py-28">
+    <section className={`border-t border-line ${alt ? "bg-surface/50" : "bg-base"} py-20 sm:py-28 relative overflow-hidden`} aria-label={label}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
         {children}
       </div>
     </section>
@@ -275,20 +275,25 @@ function SectionWrap({
 }
 
 // ── "Screenshot" frame ────────────────────────────────────────────────────────
-// Gives the live component render a product-shot context without fake device chrome.
 
 function Frame({ children, label }: { children: React.ReactNode; label?: string }) {
   return (
-    <div className="relative">
-      <div className="border border-line rounded-xl overflow-hidden bg-base shadow-[0_0_0_1px_rgba(0,0,0,0.03)]">
+    <div className="relative group">
+      <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-600/30 to-emerald-500/30 blur-xl opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <div className="relative border border-line rounded-2xl overflow-hidden bg-surface/90 shadow-2xl backdrop-blur-xl">
         {label && (
-          <div className="border-b border-line px-4 py-2.5 flex items-center gap-2 bg-surface">
-            <div className="flex gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-line" />
-              <div className="w-2 h-2 rounded-full bg-line" />
-              <div className="w-2 h-2 rounded-full bg-line" />
+          <div className="border-b border-line px-4 py-3 flex items-center justify-between bg-surface-2/60">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
+              </div>
+              <span className="text-ink-3 font-mono text-[11px] ml-2">{label}</span>
             </div>
-            <span className="text-ink-3 text-[11px] ml-1">{label}</span>
+            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">
+              LIVE MATRIX
+            </span>
           </div>
         )}
         <div className="p-4 sm:p-6">

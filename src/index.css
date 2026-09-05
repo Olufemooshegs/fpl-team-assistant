@@ -1,81 +1,85 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Rajdhani:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
 @import 'tailwindcss';
 
 /* ── Semantic color variables ─────────────────────────────────────────────── */
 
-:root {
+:root,
+html.dark {
   /* Surfaces */
-  --c-base:      #F7F9FC;
-  --c-surface:   #FFFFFF;
-  --c-surface-2: #F1F5FB;
+  --c-base:      #090D16;
+  --c-surface:   #111827;
+  --c-surface-2: #1F2937;
 
   /* Text */
+  --c-ink:   #F9FAFB;
+  --c-ink-2: #9CA3AF;
+  --c-ink-3: #6B7280;
+
+  /* Borders */
+  --c-line: rgba(255, 255, 255, 0.1);
+
+  /* Primary — electric pitch cyan / neon blue */
+  --c-primary:        #2563EB;
+  --c-primary-hover:  #3B82F6;
+  --c-primary-subtle: rgba(37, 99, 235, 0.12);
+  --c-accent-emerald: #10B981;
+
+  /* Fixture difficulty */
+  --c-easy: #10B981;  --c-easy-bg: rgba(16, 185, 129, 0.15);
+  --c-mid:  #F59E0B;  --c-mid-bg:  rgba(245, 158, 11, 0.15);
+  --c-hard: #EF4444;  --c-hard-bg: rgba(239, 68, 68, 0.15);
+
+  /* Pitch */
+  --c-pitch-gradient: radial-gradient(circle at 50% 30%, #15803D 0%, #166534 50%, #145229 100%);
+  --c-pitch-card:  rgba(15, 23, 42, 0.88);
+  --c-pitch-ink:   #F8FAFC;
+  --c-pitch-muted: #94A3B8;
+  --c-pitch-line:  rgba(255, 255, 255, 0.15);
+
+  /* Position strip colors */
+  --c-pos-gk:  #F59E0B;
+  --c-pos-def: #3B82F6;
+  --c-pos-mid: #10B981;
+  --c-pos-fwd: #F43F5E;
+
+  /* Position pills */
+  --c-pos-gk-text:  #FBBF24;  --c-pos-gk-bg:  rgba(245, 158, 11, 0.15);
+  --c-pos-def-text: #60A5FA;  --c-pos-def-bg: rgba(59, 130, 246, 0.15);
+  --c-pos-mid-text: #34D399;  --c-pos-mid-bg: rgba(16, 185, 129, 0.15);
+  --c-pos-fwd-text: #FB7185;  --c-pos-fwd-bg: rgba(244, 63, 94, 0.15);
+}
+
+html.light {
+  /* Crisp light broadcast theme option */
+  --c-base:      #F8FAFC;
+  --c-surface:   #FFFFFF;
+  --c-surface-2: #F1F5F9;
+
   --c-ink:   #0F172A;
   --c-ink-2: #475569;
   --c-ink-3: #94A3B8;
 
-  /* Borders */
   --c-line: #E2E8F0;
 
-  /* Primary — electric blue */
-  --c-primary:        #2454FF;
-  --c-primary-hover:  #1a41e6;
-  --c-primary-subtle: rgba(36, 84, 255, 0.07);
+  --c-primary:        #2563EB;
+  --c-primary-hover:  #1D4ED8;
+  --c-primary-subtle: rgba(37, 99, 235, 0.08);
 
-  /* Fixture difficulty */
-  --c-easy: #16A34A;  --c-easy-bg: #F0FDF4;
+  --c-easy: #059669;  --c-easy-bg: #ECFDF5;
   --c-mid:  #D97706;  --c-mid-bg:  #FFFBEB;
   --c-hard: #DC2626;  --c-hard-bg: #FEF2F2;
 
-  /* Pitch */
-  --c-pitch-gradient: linear-gradient(180deg, #145229 0%, #166534 30%, #15803d 60%, #166534 85%, #145229 100%);
-  --c-pitch-card:  rgba(255, 255, 255, 0.94);
+  --c-pitch-gradient: radial-gradient(circle at 50% 30%, #16A34A 0%, #15803D 50%, #166534 100%);
+  --c-pitch-card:  rgba(255, 255, 255, 0.95);
   --c-pitch-ink:   #0F172A;
-  --c-pitch-muted: #475569;
-  --c-pitch-line:  rgba(255, 255, 255, 0.07);
+  --c-pitch-muted: #64748B;
+  --c-pitch-line:  rgba(255, 255, 255, 0.25);
 
-  /* Position strip colors — static, decorative */
-  --c-pos-gk:  #D97706;
-  --c-pos-def: #2454FF;
-  --c-pos-mid: #16A34A;
-  --c-pos-fwd: #DC2626;
-
-  /* Position pills — list view */
-  --c-pos-gk-text:  #92400e;  --c-pos-gk-bg:  #fef3c7;
-  --c-pos-def-text: #075985;  --c-pos-def-bg: #e0f2fe;
-  --c-pos-mid-text: #065f46;  --c-pos-mid-bg: #d1fae5;
-  --c-pos-fwd-text: #9f1239;  --c-pos-fwd-bg: #ffe4e6;
-}
-
-html.dark {
-  --c-base:      #0B1220;
-  --c-surface:   #131B2E;
-  --c-surface-2: #1a2540;
-
-  --c-ink:   #E7ECF5;
-  --c-ink-2: #94A3B8;
-  --c-ink-3: #4A5568;
-
-  --c-line: rgba(255, 255, 255, 0.08);
-
-  --c-primary:        #2454FF;
-  --c-primary-hover:  #4070ff;
-  --c-primary-subtle: rgba(36, 84, 255, 0.15);
-
-  --c-easy: #22C55E;  --c-easy-bg: rgba(34, 197, 94, 0.12);
-  --c-mid:  #F59E0B;  --c-mid-bg:  rgba(245, 158, 11, 0.12);
-  --c-hard: #F87171;  --c-hard-bg: rgba(248, 113, 113, 0.12);
-
-  --c-pitch-gradient: linear-gradient(180deg, #0a2018 0%, #0d2d1e 30%, #103626 60%, #0d2d1e 85%, #0a2018 100%);
-  --c-pitch-card:  rgba(11, 18, 32, 0.92);
-  --c-pitch-ink:   #E7ECF5;
-  --c-pitch-muted: #94A3B8;
-
-  --c-pos-gk-text:  #fbbf24;  --c-pos-gk-bg:  rgba(251, 191, 36, 0.12);
-  --c-pos-def-text: #38bdf8;  --c-pos-def-bg: rgba(56, 189, 248, 0.12);
-  --c-pos-mid-text: #34d399;  --c-pos-mid-bg: rgba(52, 211, 153, 0.12);
-  --c-pos-fwd-text: #fb7185;  --c-pos-fwd-bg: rgba(251, 113, 133, 0.12);
+  --c-pos-gk-text:  #B45309;  --c-pos-gk-bg:  #FEF3C7;
+  --c-pos-def-text: #1D4ED8;  --c-pos-def-bg: #DBEAFE;
+  --c-pos-mid-text: #047857;  --c-pos-mid-bg: #D1FAE5;
+  --c-pos-fwd-text: #BE123C;  --c-pos-fwd-bg: #FFE4E6;
 }
 
 /* ── Tailwind theme tokens ────────────────────────────────────────────────── */
@@ -111,13 +115,14 @@ html.dark {
   --color-pos-fwd-text: var(--c-pos-fwd-text);
   --color-pos-fwd-bg:   var(--c-pos-fwd-bg);
 
-  --color-nav: #1e3a5f;
+  --color-nav: #0B1120;
 
   --font-rajdhani: "Rajdhani", sans-serif;
-  --font-dm-sans:  "DM Sans", sans-serif;
+  --font-dm-sans:  "Plus Jakarta Sans", sans-serif;
+  --font-mono:     "JetBrains Mono", monospace;
 }
 
-/* ── Base styles ──────────────────────────────────────────────────────────── */
+/* ── Base styles & Utilities ────────────────────────────────────────────────── */
 
 html,
 body,
@@ -130,24 +135,64 @@ body {
   background-color: var(--c-base);
   color: var(--c-ink);
   line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Tighter tracking on large Rajdhani display numerals */
+/* Broadcast elements */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--c-line);
+}
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--c-line);
+}
+
+.pitch-turf-bg {
+  background: var(--c-pitch-gradient);
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0.03) 40px,
+      transparent 40px,
+      transparent 80px
+    ),
+    var(--c-pitch-gradient);
+}
+
+.glow-blue {
+  box-shadow: 0 0 25px -5px rgba(37, 99, 235, 0.35);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.35);
+}
+
+/* Display numbers */
 .num-display {
-  letter-spacing: -0.025em;
+  font-family: var(--font-rajdhani);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-/* Smooth focus rings using primary color */
+/* Smooth focus rings */
 :focus-visible {
   outline: 2px solid var(--c-primary);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
-/* Subtle scrollbar */
-::-webkit-scrollbar { width: 6px; }
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: var(--c-line);
-  border-radius: 3px;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }

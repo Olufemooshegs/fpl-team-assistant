@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type Context,
-  type ReactNode,
-} from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import type { User, Session } from "@supabase/supabase-js"
 import { supabase } from "../lib/supabase"
 
@@ -16,17 +9,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>
 }
 
-// Keep the context identity stable when Vite hot-reloads this module. Route
-// modules can briefly retain the previous hook closure during a refresh.
-const authContextGlobal = globalThis as typeof globalThis & {
-  __fplTeamAssistantAuthContext?: Context<AuthContextValue | null>
-}
-
-const AuthContext =
-  authContextGlobal.__fplTeamAssistantAuthContext ??
-  createContext<AuthContextValue | null>(null)
-
-authContextGlobal.__fplTeamAssistantAuthContext = AuthContext
+const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
