@@ -26,7 +26,12 @@ function fplFdrStyle(d: number): { bg: string; text: string; label: string } {
 function FixturePill({
   fixture,
 }: {
-  fixture: { opponentCode: number; opponentShortName: string; isHome: boolean; difficulty: number } | null
+  fixture: {
+    opponentCode: number
+    opponentShortName: string
+    isHome: boolean
+    difficulty: number
+  } | null
 }) {
   if (!fixture) {
     return (
@@ -44,7 +49,11 @@ function FixturePill({
       className="w-full text-[9.5px] font-bold py-0.5 px-1 rounded flex items-center justify-center gap-1 shadow-sm leading-none"
       style={{ backgroundColor: fdr.bg, color: fdr.text }}
     >
-      <Crest teamCode={fixture.opponentCode} shortName={fixture.opponentShortName} size={11} />
+      <Crest
+        teamCode={fixture.opponentCode}
+        shortName={fixture.opponentShortName}
+        size={11}
+      />
       <span>
         {fixture.opponentShortName} {homeAway}
       </span>
@@ -133,7 +142,9 @@ function FplPlayerCard({
       {/* Points & xP Bar */}
       <div className="w-full bg-slate-900/95 text-white py-0.5 px-1 text-center font-mono flex items-center justify-between text-[10px] border-b border-slate-800">
         <span className="text-slate-400 text-[8.5px]">xP</span>
-        <span className="font-extrabold text-[#00FF87] text-[11px]">{displayPts.toFixed(1)}</span>
+        <span className="font-extrabold text-[#00FF87] text-[11px]">
+          {displayPts.toFixed(1)}
+        </span>
       </div>
 
       {/* Fixture FDR Pill */}
@@ -153,10 +164,10 @@ function OfficialPitch({
   startingXI: EnrichedPick[]
   onSelectPlayer: (ep: EnrichedPick) => void
 }) {
-  const gk  = startingXI.filter(ep => ep.element.element_type === 1)
-  const def = startingXI.filter(ep => ep.element.element_type === 2)
-  const mid = startingXI.filter(ep => ep.element.element_type === 3)
-  const fwd = startingXI.filter(ep => ep.element.element_type === 4)
+  const gk = startingXI.filter((ep) => ep.element.element_type === 1)
+  const def = startingXI.filter((ep) => ep.element.element_type === 2)
+  const mid = startingXI.filter((ep) => ep.element.element_type === 3)
+  const fwd = startingXI.filter((ep) => ep.element.element_type === 4)
 
   const reduced = useReducedMotion()
 
@@ -241,7 +252,10 @@ function FplBenchDugout({
       <div className="flex items-center justify-between mb-3 text-white">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#00FF87]" />
-          <span className="font-extrabold text-sm tracking-wider uppercase" style={{ fontFamily: "var(--font-rajdhani)" }}>
+          <span
+            className="font-extrabold text-sm tracking-wider uppercase"
+            style={{ fontFamily: "var(--font-rajdhani)" }}
+          >
             SUBSTITUTES BENCH
           </span>
         </div>
@@ -281,14 +295,19 @@ function FplDashboardHeader({
 
   // Compute live score dynamically based on active captain choice
   const rawScore = squadData.startingXI.reduce((sum, ep) => {
-    const isCap = currentCaptainId ? ep.element.id === currentCaptainId : ep.pick.is_captain
+    const isCap = currentCaptainId
+      ? ep.element.id === currentCaptainId
+      : ep.pick.is_captain
     const mult = isCap ? 2 : 1
     return sum + ep.prediction.predictedPoints * mult
   }, 0)
   const liveScore = Math.round(rawScore * 10) / 10
   const displayScore = useCountUp(liveScore, 1, 0.9)
 
-  const squadValue = squadData.startingXI.concat(squadData.bench).reduce((acc, p) => acc + p.element.now_cost, 0) / 10
+  const squadValue =
+    squadData.startingXI
+      .concat(squadData.bench)
+      .reduce((acc, p) => acc + p.element.now_cost, 0) / 10
 
   return (
     <div className="bg-[#37003C] text-white rounded-2xl p-6 sm:p-8 mb-8 border-2 border-slate-800 shadow-2xl relative overflow-hidden">
@@ -302,9 +321,14 @@ function FplDashboardHeader({
             <span className="bg-[#00FF87] text-[#37003C] text-xs font-black px-2.5 py-0.5 rounded uppercase tracking-wider">
               MY TEAM &bull; GW{squadData.gameweek}
             </span>
-            <span className="text-xs text-slate-300 font-mono">LIVE OPTA MATRIX</span>
+            <span className="text-xs text-slate-300 font-mono">
+              LIVE OPTA MATRIX
+            </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ fontFamily: "var(--font-rajdhani)" }}>
+          <h1
+            className="text-2xl sm:text-3xl font-black tracking-tight"
+            style={{ fontFamily: "var(--font-rajdhani)" }}
+          >
             FPL TACTICAL ASSISTANT
           </h1>
         </div>
@@ -312,13 +336,17 @@ function FplDashboardHeader({
         {/* Predicted Points Counter */}
         <div className="bg-black/40 border border-white/10 rounded-xl px-5 py-3 flex items-center gap-4">
           <div>
-            <p className="text-[10px] text-slate-400 font-mono uppercase">Predicted GW Score</p>
+            <p className="text-[10px] text-slate-400 font-mono uppercase">
+              Predicted GW Score
+            </p>
             <div className="text-3xl font-black text-[#00FF87] font-mono leading-none">
               {displayScore}
             </div>
           </div>
           <div className="text-right border-l border-white/10 pl-4">
-            <p className="text-[10px] text-slate-400 font-mono uppercase">Target</p>
+            <p className="text-[10px] text-slate-400 font-mono uppercase">
+              Target
+            </p>
             <p className="text-xl font-extrabold text-white font-mono">80.0</p>
           </div>
         </div>
@@ -327,7 +355,9 @@ function FplDashboardHeader({
       {/* Stats Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-5 border-b border-white/10">
         <div>
-          <p className="text-[10px] text-slate-300 font-mono uppercase">Free Transfers</p>
+          <p className="text-[10px] text-slate-300 font-mono uppercase">
+            Free Transfers
+          </p>
           <div className="flex items-center gap-2 mt-1">
             <button
               onClick={() => onTransfersChange(Math.max(0, freeTransfers - 1))}
@@ -335,7 +365,9 @@ function FplDashboardHeader({
             >
               -
             </button>
-            <span className="font-extrabold text-lg text-[#00FF87] font-mono">{freeTransfers}</span>
+            <span className="font-extrabold text-lg text-[#00FF87] font-mono">
+              {freeTransfers}
+            </span>
             <button
               onClick={() => onTransfersChange(Math.min(5, freeTransfers + 1))}
               className="w-6 h-6 bg-white/10 rounded hover:bg-white/20 font-bold text-xs cursor-pointer"
@@ -346,25 +378,43 @@ function FplDashboardHeader({
         </div>
 
         <div>
-          <p className="text-[10px] text-slate-300 font-mono uppercase">In Bank</p>
-          <p className="text-lg font-extrabold text-white font-mono mt-1">£{(squadData.bank / 10).toFixed(1)}m</p>
+          <p className="text-[10px] text-slate-300 font-mono uppercase">
+            In Bank
+          </p>
+          <p className="text-lg font-extrabold text-white font-mono mt-1">
+            £{(squadData.bank / 10).toFixed(1)}m
+          </p>
         </div>
 
         <div>
-          <p className="text-[10px] text-slate-300 font-mono uppercase">Squad Value</p>
-          <p className="text-lg font-extrabold text-white font-mono mt-1">£{squadValue.toFixed(1)}m</p>
+          <p className="text-[10px] text-slate-300 font-mono uppercase">
+            Squad Value
+          </p>
+          <p className="text-lg font-extrabold text-white font-mono mt-1">
+            £{squadValue.toFixed(1)}m
+          </p>
         </div>
 
         <div>
-          <p className="text-[10px] text-slate-300 font-mono uppercase">Captain Choice</p>
+          <p className="text-[10px] text-slate-300 font-mono uppercase">
+            Captain Choice
+          </p>
           <select
-            value={currentCaptainId || squadData.startingXI.find(p => p.pick.is_captain)?.element.id}
-            onChange={e => onCaptainChange(Number(e.target.value))}
+            value={
+              currentCaptainId ||
+              squadData.startingXI.find((p) => p.pick.is_captain)?.element.id
+            }
+            onChange={(e) => onCaptainChange(Number(e.target.value))}
             className="mt-1 bg-black/60 border border-white/20 rounded px-2 py-1 text-xs font-bold text-[#00FF87] focus:outline-none cursor-pointer"
           >
-            {squadData.startingXI.map(ep => (
-              <option key={ep.element.id} value={ep.element.id} className="bg-slate-900 text-white">
-                {ep.element.web_name} (xP: {ep.prediction.predictedPoints.toFixed(1)})
+            {squadData.startingXI.map((ep) => (
+              <option
+                key={ep.element.id}
+                value={ep.element.id}
+                className="bg-slate-900 text-white"
+              >
+                {ep.element.web_name} (xP:{" "}
+                {ep.prediction.predictedPoints.toFixed(1)})
               </option>
             ))}
           </select>
@@ -373,24 +423,28 @@ function FplDashboardHeader({
 
       {/* FPL Chips Bar */}
       <div className="mt-4 flex items-center justify-between gap-2 flex-wrap">
-        <span className="text-xs font-mono font-bold text-slate-300">FPL CHIPS:</span>
+        <span className="text-xs font-mono font-bold text-slate-300">
+          FPL CHIPS:
+        </span>
         <div className="flex items-center gap-2 flex-wrap">
-          {["Wildcard", "Free Hit", "Triple Captain", "Bench Boost"].map(chip => {
-            const active = activeChip === chip
-            return (
-              <button
-                key={chip}
-                onClick={() => setActiveChip(active ? null : chip)}
-                className={`px-3 py-1 rounded text-xs font-bold font-mono transition-all cursor-pointer ${
-                  active
-                    ? "bg-[#00FF87] text-[#37003C] shadow-lg scale-105"
-                    : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
-                }`}
-              >
-                {chip} {active && "✓"}
-              </button>
-            )
-          })}
+          {["Wildcard", "Free Hit", "Triple Captain", "Bench Boost"].map(
+            (chip) => {
+              const active = activeChip === chip
+              return (
+                <button
+                  key={chip}
+                  onClick={() => setActiveChip(active ? null : chip)}
+                  className={`px-3 py-1 rounded text-xs font-bold font-mono transition-all cursor-pointer ${
+                    active
+                      ? "bg-[#00FF87] text-[#37003C] shadow-lg scale-105"
+                      : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
+                  }`}
+                >
+                  {chip} {active && "✓"}
+                </button>
+              )
+            },
+          )}
         </div>
       </div>
     </div>
@@ -428,15 +482,25 @@ function FplPlayerModal({
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-start justify-between bg-black/30">
           <div className="flex items-center gap-4">
-            <Jersey teamCode={team.code} teamShortName={team.short_name} isGK={element.element_type === 1} size={60} />
+            <Jersey
+              teamCode={team.code}
+              teamShortName={team.short_name}
+              isGK={element.element_type === 1}
+              size={60}
+            />
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[10px] font-black bg-[#00FF87] text-[#37003C] px-2 py-0.5 rounded">
                   £{(element.now_cost / 10).toFixed(1)}m
                 </span>
-                <span className="text-xs text-slate-300 font-mono">{team.name}</span>
+                <span className="text-xs text-slate-300 font-mono">
+                  {team.name}
+                </span>
               </div>
-              <h3 className="text-2xl font-black" style={{ fontFamily: "var(--font-rajdhani)" }}>
+              <h3
+                className="text-2xl font-black"
+                style={{ fontFamily: "var(--font-rajdhani)" }}
+              >
                 {element.first_name} {element.second_name}
               </h3>
             </div>
@@ -478,13 +542,25 @@ function FplPlayerModal({
           {/* Key Metrics */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-black/40 p-4 rounded-xl border border-white/10">
-              <p className="text-slate-400 text-[10px] font-mono uppercase">Predicted xP</p>
-              <p className="text-3xl font-black text-[#00FF87] font-mono mt-1">{displayPts.toFixed(1)}</p>
-              {isCaptain && <p className="text-[10px] text-[#00FF87]">Captain Double Points</p>}
+              <p className="text-slate-400 text-[10px] font-mono uppercase">
+                Predicted xP
+              </p>
+              <p className="text-3xl font-black text-[#00FF87] font-mono mt-1">
+                {displayPts.toFixed(1)}
+              </p>
+              {isCaptain && (
+                <p className="text-[10px] text-[#00FF87]">
+                  Captain Double Points
+                </p>
+              )}
             </div>
             <div className="bg-black/40 p-4 rounded-xl border border-white/10">
-              <p className="text-slate-400 text-[10px] font-mono uppercase">Form (5 GWs)</p>
-              <p className="text-3xl font-black text-white font-mono mt-1">{element.form}</p>
+              <p className="text-slate-400 text-[10px] font-mono uppercase">
+                Form (5 GWs)
+              </p>
+              <p className="text-3xl font-black text-white font-mono mt-1">
+                {element.form}
+              </p>
               <p className="text-[10px] text-slate-400">Pts per game</p>
             </div>
           </div>
@@ -492,11 +568,15 @@ function FplPlayerModal({
           <div className="bg-black/40 p-4 rounded-xl border border-white/10 space-y-2 text-xs">
             <div className="flex justify-between">
               <span className="text-slate-400">Ownership:</span>
-              <span className="font-mono font-bold text-white">{element.selected_by_percent}%</span>
+              <span className="font-mono font-bold text-white">
+                {element.selected_by_percent}%
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Total Points:</span>
-              <span className="font-mono font-bold text-white">{element.total_points}</span>
+              <span className="font-mono font-bold text-white">
+                {element.total_points}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-400">Next Match:</span>
@@ -523,11 +603,15 @@ function AuthGate({ startingXI }: { startingXI: EnrichedPick[] }) {
           <div className="w-12 h-12 rounded-full bg-[#00FF87] text-[#37003C] font-black text-xl flex items-center justify-center mx-auto mb-4">
             FPL
           </div>
-          <h3 className="text-2xl font-black mb-2" style={{ fontFamily: "var(--font-rajdhani)" }}>
+          <h3
+            className="text-2xl font-black mb-2"
+            style={{ fontFamily: "var(--font-rajdhani)" }}
+          >
             SIGN IN TO SEE YOUR FPL TEAM
           </h3>
           <p className="text-slate-300 text-sm leading-relaxed mb-6">
-            Get personalized player projections, captain recommendations, and data-driven transfer target suggestions.
+            Get personalized player projections, captain recommendations, and
+            data-driven transfer target suggestions.
           </p>
           <a
             href="/login?mode=signup"
@@ -535,7 +619,10 @@ function AuthGate({ startingXI }: { startingXI: EnrichedPick[] }) {
           >
             CREATE FREE ACCOUNT
           </a>
-          <a href="/login" className="text-xs text-slate-300 hover:text-white underline">
+          <a
+            href="/login"
+            className="text-xs text-slate-300 hover:text-white underline"
+          >
             Already have an account? Sign in
           </a>
         </div>
@@ -554,23 +641,30 @@ export default function SquadView({
   isAuthenticated: boolean
 }) {
   const [freeTransfers, setFreeTransfers] = useState(2)
-  const [selectedPlayer, setSelectedPlayer] = useState<EnrichedPick | null>(null)
+  const [selectedPlayer, setSelectedPlayer] = useState<EnrichedPick | null>(
+    null,
+  )
   const [injectedSwap, setInjectedSwap] = useState<SingleSwap | null>(null)
   const [captainId, setCaptainId] = useState<number | null>(
-    squadData.startingXI.find(p => p.pick.is_captain)?.element.id || null
+    squadData.startingXI.find((p) => p.pick.is_captain)?.element.id || null,
   )
   const [viceCaptainId, setViceCaptainId] = useState<number | null>(
-    squadData.startingXI.find(p => p.pick.is_vice_captain)?.element.id || null
+    squadData.startingXI.find((p) => p.pick.is_vice_captain)?.element.id ||
+      null,
   )
 
   // Dynamically enrich starting XI with captain selections
-  const enrichedStartingXI = squadData.startingXI.map(ep => ({
+  const enrichedStartingXI = squadData.startingXI.map((ep) => ({
     ...ep,
     pick: {
       ...ep.pick,
       is_captain: captainId ? ep.element.id === captainId : ep.pick.is_captain,
-      is_vice_captain: viceCaptainId ? ep.element.id === viceCaptainId : ep.pick.is_vice_captain,
-      multiplier: (captainId ? ep.element.id === captainId : ep.pick.is_captain) ? 2 : 1,
+      is_vice_captain: viceCaptainId
+        ? ep.element.id === viceCaptainId
+        : ep.pick.is_vice_captain,
+      multiplier: (captainId ? ep.element.id === captainId : ep.pick.is_captain)
+        ? 2
+        : 1,
     },
   }))
 
@@ -615,7 +709,8 @@ export default function SquadView({
           isViceCaptain={viceCaptainId === selectedPlayer.element.id}
           onSetCaptain={() => {
             setCaptainId(selectedPlayer.element.id)
-            if (viceCaptainId === selectedPlayer.element.id) setViceCaptainId(null)
+            if (viceCaptainId === selectedPlayer.element.id)
+              setViceCaptainId(null)
           }}
           onSetViceCaptain={() => {
             setViceCaptainId(selectedPlayer.element.id)
