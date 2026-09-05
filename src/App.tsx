@@ -7,6 +7,8 @@ import { AuthProvider } from "./contexts/AuthContext"
 
 // ── Root ──────────────────────────────────────────────────────────────────────
 
+// ── Root ──────────────────────────────────────────────────────────────────────
+
 export default function App() {
   return (
     <AuthProvider>

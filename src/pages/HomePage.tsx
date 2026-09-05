@@ -340,16 +340,31 @@ export default function HomePage() {
       ])
 
       const currentEvent = bootstrap.events.find(e => e.is_current)
-      const nextEvent = bootstrap.events.find(e => e.is_next)
-      const unfinishedEvent = bootstrap.events.find(e => !e.finished)
-      const activeEvent = currentEvent || nextEvent || unfinishedEvent || bootstrap.events[0]
-      const gameweek = activeEvent ? activeEvent.id : 1
+      const finishedEvents = bootstrap.events.filter(e => e.finished)
+      const latestFinished = finishedEvents[finishedEvents.length - 1]
+      
+      const primaryEvent = currentEvent || latestFinished || bootstrap.events[0]
+      let gameweek = primaryEvent ? primaryEvent.id : 1
 
       setAppPhase({ phase: "loading", message: `Loading GW${gameweek} squad...` })
 
-      const teamPicks = await fetchJson<TeamPicksResponse>(
-        fplApiUrl(`team/${teamId}/${gameweek}`),
-      )
+      let teamPicks: TeamPicksResponse
+      try {
+        teamPicks = await fetchJson<TeamPicksResponse>(
+          fplApiUrl(`team/${teamId}/${gameweek}`),
+        )
+      } catch (err) {
+        // Fallback to previous gameweek if current gameweek picks are not public yet
+        if (gameweek > 1) {
+          gameweek = gameweek - 1
+          setAppPhase({ phase: "loading", message: `Loading GW${gameweek} squad...` })
+          teamPicks = await fetchJson<TeamPicksResponse>(
+            fplApiUrl(`team/${teamId}/${gameweek}`),
+          )
+        } else {
+          throw err
+        }
+      }
 
       setAppPhase({ phase: "loading", message: `Analysing ${teamPicks.picks.length} players...` })
 
