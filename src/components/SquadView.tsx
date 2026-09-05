@@ -9,6 +9,13 @@ import { useCountUp } from "../hooks/useCountUp"
 
 // ── Official FPL FDR Difficulty Colors ────────────────────────────────────────
 
+const POSITION_COLOR: Record<number, string> = {
+  1: "#D97706",
+  2: "#2454FF",
+  3: "#16A34A",
+  4: "#DC2626",
+}
+
 function fplFdrStyle(d: number): { bg: string; text: string; label: string } {
   if (d <= 2) return { bg: "#00FF87", text: "#00552B", label: "Easy" }
   if (d === 3) return { bg: "#E7E7E7", text: "#242424", label: "Medium" }
