@@ -3,6 +3,8 @@ import { Analytics } from "@vercel/analytics/react"
 import { router } from "./app/routes"
 import { AuthProvider } from "./contexts/AuthContext"
 
+// ── Root ──────────────────────────────────────────────────────────────────────
+
 export default function App() {
   return (
     <AuthProvider>

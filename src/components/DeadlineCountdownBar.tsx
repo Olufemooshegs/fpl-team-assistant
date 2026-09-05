@@ -128,10 +128,13 @@ export default function DeadlineCountdownBar() {
             Gameweek {event.id} Deadline
           </span>
 
-          {countdown.isExpired ? (
-            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700">
-              Gameweek in Progress
-            </span>
+          {event.is_current || countdown.isExpired ? (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-[#00FF87]">
+              <span className="w-2 h-2 rounded-full bg-[#00FF87] shadow-[0_0_10px_#00FF87] animate-pulse" />
+              <span className="text-xs font-mono font-extrabold uppercase tracking-wider">
+                LIVE GAMEWEEK {event.id} IN PROGRESS
+              </span>
+            </div>
           ) : (
             <span
               className={`text-[11px] font-mono font-extrabold px-2 py-0.5 rounded border hidden md:inline ${

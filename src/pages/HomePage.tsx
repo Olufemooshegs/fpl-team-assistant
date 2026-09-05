@@ -187,6 +187,7 @@ function TeamLoader({
   errorMessage: string | null
 }) {
   const [teamId, setTeamId] = useState("")
+  const [showGuide, setShowGuide] = useState(false)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -207,7 +208,7 @@ function TeamLoader({
         <div className="flex items-center justify-between gap-4 mb-2">
           <h2
             id="team-loader-heading"
-            className="text-ink tracking-tight"
+            className="text-ink tracking-tight uppercase"
             style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "24px" }}
           >
             IMPORT FPL SQUAD
@@ -217,9 +218,8 @@ function TeamLoader({
           </span>
         </div>
 
-        <p className="text-ink-3 text-xs sm:text-sm mb-6">
-          Find your Team ID in the FPL URL under{" "}
-          <span className="text-emerald-400 font-semibold font-mono">Points &rarr; View Gameweek History</span>.
+        <p className="text-ink-3 text-xs sm:text-sm mb-5">
+          Enter your FPL Team ID to analyze your squad, get point projections, and optimize transfers.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
@@ -256,6 +256,44 @@ function TeamLoader({
             )}
           </button>
         </form>
+
+        {/* How to find ID toggle */}
+        <div className="mt-4 pt-4 border-t border-line/60">
+          <button
+            type="button"
+            onClick={() => setShowGuide(prev => !prev)}
+            className="flex items-center justify-between w-full text-left text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5">
+              <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              How do I find my FPL Team ID?
+            </span>
+            <span className="text-xs font-mono font-bold text-blue-400">{showGuide ? "Hide Guide ▲" : "Show Guide ▼"}</span>
+          </button>
+
+          {showGuide && (
+            <div className="mt-3 p-4 rounded-xl bg-surface-2/90 border border-line text-xs space-y-3 text-ink-2">
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
+                <p>Log in to your FPL account at <a href="https://fantasy.premierleague.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-mono font-semibold underline">fantasy.premierleague.com</a>.</p>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
+                <p>Click on the <strong className="text-white">Points</strong> tab (or <strong className="text-white">Gameweek History</strong> / <strong className="text-white">Pick Team</strong>).</p>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">3</span>
+                <p>Look at the URL in your browser address bar. It will look like this:</p>
+              </div>
+              <div className="bg-slate-950 p-3 rounded-lg font-mono text-[11px] text-emerald-400 border border-white/10 break-all">
+                https://fantasy.premierleague.com/entry/<span className="bg-emerald-500/30 text-white font-black px-1.5 py-0.5 rounded border border-emerald-400">3058</span>/event/22
+              </div>
+              <p className="text-[11px] text-ink-3">
+                The number between <code className="text-ink font-semibold">/entry/</code> and <code className="text-ink font-semibold">/event/</code> (e.g. <strong className="text-emerald-400 font-mono font-bold">3058</strong>) is your Team ID.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Quick sample chips */}
         <div className="mt-5 pt-4 border-t border-line/60 flex items-center gap-2 flex-wrap">

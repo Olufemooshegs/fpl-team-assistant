@@ -174,6 +174,8 @@ function Header({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 
+import Footer from "../components/Footer"
+
 export default function Layout() {
   const [dark, toggleDark] = useDarkMode()
   const location = useLocation()
@@ -200,11 +202,7 @@ export default function Layout() {
           </motion.div>
         </AnimatePresence>
       </main>
-      <footer className="border-t border-line py-6 mt-6">
-        <p className="text-center text-ink-3 text-xs leading-relaxed">
-          FPL Team Assistant &mdash; not affiliated with Fantasy Premier League or the Premier League.
-        </p>
-      </footer>
+      <Footer />
     </div>
   )
 }

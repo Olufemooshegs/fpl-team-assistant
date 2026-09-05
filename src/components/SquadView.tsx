@@ -87,6 +87,7 @@ function FplPlayerCard({
   const { pick, element, team, prediction, nextFixture } = ep
   const isGK = element.element_type === 1
   const displayPts = prediction.predictedPoints * Math.max(pick.multiplier, 1)
+  const stripColor = POSITION_COLOR[element.element_type] ?? "#94A3B8"
 
   return (
     <div
@@ -294,7 +295,7 @@ function FplDashboardHeader({
             <span className="bg-[#00FF87] text-[#37003C] text-xs font-black px-2.5 py-0.5 rounded uppercase tracking-wider">
               MY TEAM &bull; GW{squadData.gameweek}
             </span>
-            <span className="text-xs text-slate-300 font-mono">DEADLINE SAT 15 FEB</span>
+            <span className="text-xs text-slate-300 font-mono">LIVE OPTA MATRIX</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ fontFamily: "var(--font-rajdhani)" }}>
             FPL TACTICAL ASSISTANT
