@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /login
 
-Sitemap: https://fplassistant.app/sitemap.xml
+Sitemap: https://www.fplteamassistant.tech/sitemap.xml

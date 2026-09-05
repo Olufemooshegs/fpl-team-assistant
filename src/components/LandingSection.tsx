@@ -350,7 +350,7 @@ function PitchSection() {
 
         {/* Live pitch preview — hidden on mobile (too compact), shown sm+ */}
         <Reveal delay={0.1} y={24} className="hidden sm:block">
-          <Frame label="fplassistant.app — Your Squad">
+          <Frame label="fplteamassistant.tech — Your Squad">
             <PitchPreview />
             <div className="mt-4 pt-4 border-t border-line">
               <p className="text-ink-3 text-[10px] mb-2 font-medium">Bench</p>
@@ -377,7 +377,7 @@ function ScoreSection() {
 
         {/* Live score banner */}
         <Reveal delay={0.05} y={24} className="lg:order-first">
-          <Frame label="fplassistant.app — GW22 Prediction">
+          <Frame label="fplteamassistant.tech — GW22 Prediction">
             <ScorePreview />
           </Frame>
         </Reveal>
