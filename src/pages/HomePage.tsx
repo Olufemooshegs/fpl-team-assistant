@@ -9,18 +9,21 @@ import type {
   SquadData,
   EnrichedPick,
 } from "../types"
-import { calculatePrediction, getNextEventId, resolveFixtureInfo } from "../services/prediction"
+import {
+  calculatePrediction,
+  getNextEventId,
+  resolveFixtureInfo,
+} from "../services/prediction"
 import SquadView from "../components/SquadView"
 import LandingSection from "../components/LandingSection"
 import { useAuth } from "../contexts/AuthContext"
 
 // ── App state ─────────────────────────────────────────────────────────────────
 
-type AppPhase =
-  | { phase: "idle" }
-  | { phase: "loading"; message: string }
-  | { phase: "error"; message: string }
-  | { phase: "loaded"; squadData: SquadData }
+type AppPhase = { phase: "idle" } | { phase: "loading" message: string } | {
+  phase: "error"
+  message: string
+} | { phase: "loaded" squadData: SquadData }
 
 function fplApiUrl(path: string): string {
   return `${import.meta.env.BASE_URL}api/fpl/${path}`
@@ -32,7 +35,14 @@ async function fetchJson<T>(url: string): Promise<T> {
 
   if (!res.ok) {
     if (res.status === 404) {
-      throw new Error("FPL Team ID not found for this Gameweek. Please verify your Team ID.")
+      throw new Error(
+        "FPL Team ID not found or squad picks for this Gameweek are not yet available. Please check your Team ID.",
+      )
+    }
+    if (res.status === 403) {
+      throw new Error(
+        "Access forbidden by FPL (403). FPL squad details may be private or protected for this Team ID.",
+      )
     }
     let message = `FPL API error (${res.status})`
     if (contentType.includes("application/json")) {
@@ -51,7 +61,9 @@ async function fetchJson<T>(url: string): Promise<T> {
     if (text.startsWith("{") || text.startsWith("[")) {
       return JSON.parse(text) as T
     }
-    throw new Error("FPL service returned an invalid response format. Please try again.")
+    throw new Error(
+      "FPL service returned an invalid response format. Please try again.",
+    )
   }
 
   return (await res.json()) as T
@@ -62,22 +74,24 @@ async function fetchJson<T>(url: string): Promise<T> {
 function Hero() {
   const displayed = useCountUp(84.2, 1, 0.9)
   return (
-    <section className="relative overflow-hidden border-b border-line bg-gradient-to-b from-slate-950 via-slate-900 to-base py-16 sm:py-24" aria-labelledby="landing-hero-heading">
-      
+    <section
+      className="relative overflow-hidden border-b border-line bg-gradient-to-b from-slate-950 via-slate-900 to-base py-16 sm:py-24"
+      aria-labelledby="landing-hero-heading"
+    >
       {/* Decorative radial glows */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/4 right-10 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-
           {/* Text & Pitch CTAs */}
           <div className="lg:col-span-7">
-            
             {/* Broadcast badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-              <span className="text-blue-400 text-xs font-semibold tracking-wide uppercase font-mono">GW22 AI PREDICTION SUITE</span>
+              <span className="text-blue-400 text-xs font-semibold tracking-wide uppercase font-mono">
+                GW22 AI PREDICTION SUITE
+              </span>
             </div>
 
             <h1
@@ -96,37 +110,51 @@ function Hero() {
             </h1>
 
             <p className="text-ink-2 text-base sm:text-lg leading-relaxed mb-8 max-w-xl">
-              Import your FPL squad instantly. Get xP point projections, fixture difficulty matrix, and automated transfer recommendations powered by live Opta-style metrics.
+              Import your FPL squad instantly. Get xP point projections, fixture
+              difficulty matrix, and automated transfer recommendations powered
+              by live Opta-style metrics.
             </p>
 
             <div className="grid grid-cols-3 gap-3 max-w-lg mb-4">
               <div className="bg-surface/60 border border-line rounded-xl p-3 text-center backdrop-blur-sm">
-                <p className="text-emerald-400 font-bold text-xl font-mono">94.8%</p>
-                <p className="text-ink-3 text-[11px] font-medium uppercase tracking-wider">Model Accuracy</p>
+                <p className="text-emerald-400 font-bold text-xl font-mono">
+                  94.8%
+                </p>
+                <p className="text-ink-3 text-[11px] font-medium uppercase tracking-wider">
+                  Model Accuracy
+                </p>
               </div>
               <div className="bg-surface/60 border border-line rounded-xl p-3 text-center backdrop-blur-sm">
-                <p className="text-blue-400 font-bold text-xl font-mono">80.0+</p>
-                <p className="text-ink-3 text-[11px] font-medium uppercase tracking-wider">Target Points</p>
+                <p className="text-blue-400 font-bold text-xl font-mono">
+                  80.0+
+                </p>
+                <p className="text-ink-3 text-[11px] font-medium uppercase tracking-wider">
+                  Target Points
+                </p>
               </div>
               <div className="bg-surface/60 border border-line rounded-xl p-3 text-center backdrop-blur-sm">
-                <p className="text-indigo-400 font-bold text-xl font-mono">LIVE</p>
-                <p className="text-ink-3 text-[11px] font-medium uppercase tracking-wider">Opta Feed</p>
+                <p className="text-indigo-400 font-bold text-xl font-mono">
+                  LIVE
+                </p>
+                <p className="text-ink-3 text-[11px] font-medium uppercase tracking-wider">
+                  Opta Feed
+                </p>
               </div>
             </div>
-
           </div>
 
           {/* Hero Big Stats Card */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <div className="w-full max-w-md bg-surface/80 border border-line rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative group hover:border-blue-500/30 transition-all duration-300">
-              
               <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-tr-2xl pointer-events-none" />
 
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-mono text-emerald-400 font-semibold uppercase tracking-wider bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
                   TOP RANK BENCHMARK
                 </span>
-                <span className="text-xs text-ink-3 font-mono">GW PROJECTED</span>
+                <span className="text-xs text-ink-3 font-mono">
+                  GW PROJECTED
+                </span>
               </div>
 
               <div className="text-center py-4">
@@ -139,7 +167,9 @@ function Hero() {
                 >
                   {displayed}
                 </div>
-                <p className="text-ink-2 font-medium text-sm mt-2">Predicted GW Avg Points</p>
+                <p className="text-ink-2 font-medium text-sm mt-2">
+                  Predicted GW Avg Points
+                </p>
               </div>
 
               <div className="mt-4 pt-4 border-t border-line flex items-center justify-between text-xs text-ink-3">
@@ -149,10 +179,8 @@ function Hero() {
                 </span>
                 <span className="font-mono">FPL API Proxy</span>
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
     </section>
@@ -202,14 +230,20 @@ function TeamLoader({
   }
 
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10" aria-labelledby="team-loader-heading">
+    <section
+      className="max-w-6xl mx-auto px-4 sm:px-6 py-10"
+      aria-labelledby="team-loader-heading"
+    >
       <div className="bg-surface border border-line rounded-2xl p-6 sm:p-8 max-w-2xl mx-auto shadow-xl relative overflow-hidden">
-        
         <div className="flex items-center justify-between gap-4 mb-2">
           <h2
             id="team-loader-heading"
             className="text-ink tracking-tight uppercase"
-            style={{ fontFamily: "var(--font-rajdhani)", fontWeight: 700, fontSize: "24px" }}
+            style={{
+              fontFamily: "var(--font-rajdhani)",
+              fontWeight: 700,
+              fontSize: "24px",
+            }}
           >
             IMPORT FPL SQUAD
           </h2>
@@ -219,17 +253,21 @@ function TeamLoader({
         </div>
 
         <p className="text-ink-3 text-xs sm:text-sm mb-5">
-          Enter your FPL Team ID to analyze your squad, get point projections, and optimize transfers.
+          Enter your FPL Team ID to analyze your squad, get point projections,
+          and optimize transfers.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col sm:flex-row gap-3"
+        >
           <div className="relative flex-1">
             <input
               type="text"
               inputMode="numeric"
               pattern="\d*"
               value={teamId}
-              onChange={e => setTeamId(e.target.value)}
+              onChange={(e) => setTeamId(e.target.value)}
               placeholder="Enter Team ID (e.g. 3058)"
               disabled={isLoading}
               className="w-full h-12 bg-base/80 border border-line rounded-xl px-4 text-ink font-mono text-sm placeholder-ink-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50"
@@ -242,16 +280,40 @@ function TeamLoader({
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
-                <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                <svg
+                  className="animate-spin w-4 h-4 text-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
                 </svg>
                 Processing...
               </span>
             ) : (
               <>
                 <span>ANALYSE SQUAD</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
               </>
             )}
           </button>
@@ -261,35 +323,81 @@ function TeamLoader({
         <div className="mt-4 pt-4 border-t border-line/60">
           <button
             type="button"
-            onClick={() => setShowGuide(prev => !prev)}
+            onClick={() => setShowGuide((prev) => !prev)}
             className="flex items-center justify-between w-full text-left text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-1.5">
-              <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <svg
+                className="w-4 h-4 text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4M12 8h.01" />
+              </svg>
               How do I find my FPL Team ID?
             </span>
-            <span className="text-xs font-mono font-bold text-blue-400">{showGuide ? "Hide Guide ▲" : "Show Guide ▼"}</span>
+            <span className="text-xs font-mono font-bold text-blue-400">
+              {showGuide ? "Hide Guide ▲" : "Show Guide ▼"}
+            </span>
           </button>
 
           {showGuide && (
             <div className="mt-3 p-4 rounded-xl bg-surface-2/90 border border-line text-xs space-y-3 text-ink-2">
               <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
-                <p>Log in to your FPL account at <a href="https://fantasy.premierleague.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-mono font-semibold underline">fantasy.premierleague.com</a>.</p>
+                <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                  1
+                </span>
+                <p>
+                  Log in to your FPL account at{" "}
+                  <a
+                    href="https://fantasy.premierleague.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-400 font-mono font-semibold underline"
+                  >
+                    fantasy.premierleague.com
+                  </a>
+                  .
+                </p>
               </div>
               <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
-                <p>Click on the <strong className="text-white">Points</strong> tab (or <strong className="text-white">Gameweek History</strong> / <strong className="text-white">Pick Team</strong>).</p>
+                <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                  2
+                </span>
+                <p>
+                  Click on the <strong className="text-white">Points</strong>{" "}
+                  tab (or{" "}
+                  <strong className="text-white">Gameweek History</strong> /{" "}
+                  <strong className="text-white">Pick Team</strong>).
+                </p>
               </div>
               <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">3</span>
-                <p>Look at the URL in your browser address bar. It will look like this:</p>
+                <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                  3
+                </span>
+                <p>
+                  Look at the URL in your browser address bar. It will look like
+                  this:
+                </p>
               </div>
               <div className="bg-slate-950 p-3 rounded-lg font-mono text-[11px] text-emerald-400 border border-white/10 break-all">
-                https://fantasy.premierleague.com/entry/<span className="bg-emerald-500/30 text-white font-black px-1.5 py-0.5 rounded border border-emerald-400">3058</span>/event/22
+                https://fantasy.premierleague.com/entry/
+                <span className="bg-emerald-500/30 text-white font-black px-1.5 py-0.5 rounded border border-emerald-400">
+                  3058
+                </span>
+                /event/22
               </div>
               <p className="text-[11px] text-ink-3">
-                The number between <code className="text-ink font-semibold">/entry/</code> and <code className="text-ink font-semibold">/event/</code> (e.g. <strong className="text-emerald-400 font-mono font-bold">3058</strong>) is your Team ID.
+                The number between{" "}
+                <code className="text-ink font-semibold">/entry/</code> and{" "}
+                <code className="text-ink font-semibold">/event/</code> (e.g.{" "}
+                <strong className="text-emerald-400 font-mono font-bold">
+                  3058
+                </strong>
+                ) is your Team ID.
               </p>
             </div>
           )}
@@ -298,7 +406,7 @@ function TeamLoader({
         {/* Quick sample chips */}
         <div className="mt-5 pt-4 border-t border-line/60 flex items-center gap-2 flex-wrap">
           <span className="text-ink-3 text-xs">Try sample teams:</span>
-          {["1", "100", "500", "1234"].map(sampleId => (
+          {["1", "100", "500", "1234"].map((sampleId) => (
             <button
               key={sampleId}
               type="button"
@@ -313,8 +421,16 @@ function TeamLoader({
 
         {errorMessage && (
           <div className="mt-4 flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
-            <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-9.25a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zm.75 6a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+            <svg
+              className="w-5 h-5 shrink-0 mt-0.5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-9.25a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zm.75 6a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                clipRule="evenodd"
+              />
             </svg>
             <p className="text-xs sm:text-sm font-medium">{errorMessage}</p>
           </div>
@@ -339,56 +455,81 @@ export default function HomePage() {
         fetchJson<FplFixture[]>(fplApiUrl("fixtures")),
       ])
 
-      const currentEvent = bootstrap.events.find(e => e.is_current)
-      const finishedEvents = bootstrap.events.filter(e => e.finished)
+      const currentEvent = bootstrap.events.find((e) => e.is_current)
+      const finishedEvents = bootstrap.events.filter((e) => e.finished)
       const latestFinished = finishedEvents[finishedEvents.length - 1]
-      
+
       const primaryEvent = currentEvent || latestFinished || bootstrap.events[0]
       let gameweek = primaryEvent ? primaryEvent.id : 1
 
-      setAppPhase({ phase: "loading", message: `Loading GW${gameweek} squad...` })
+      setAppPhase({
+        phase: "loading",
+        message: `Loading GW${gameweek} squad...`,
+      })
 
-      let teamPicks: TeamPicksResponse
+      let teamPicks: TeamPicksResponse | null = null
       try {
         teamPicks = await fetchJson<TeamPicksResponse>(
           fplApiUrl(`team/${teamId}/${gameweek}`),
         )
       } catch (err) {
-        // Fallback to previous gameweek if current gameweek picks are not public yet
-        if (gameweek > 1) {
-          gameweek = gameweek - 1
-          setAppPhase({ phase: "loading", message: `Loading GW${gameweek} squad...` })
-          teamPicks = await fetchJson<TeamPicksResponse>(
-            fplApiUrl(`team/${teamId}/${gameweek}`),
-          )
-        } else {
+        // Fallback to previous gameweeks if current gameweek picks are not public or returned 404/403
+        let fallbackGw = gameweek - 1
+        while (fallbackGw >= 1 && !teamPicks) {
+          try {
+            setAppPhase({
+              phase: "loading",
+              message: `Loading GW${fallbackGw} squad...`,
+            })
+            teamPicks = await fetchJson<TeamPicksResponse>(
+              fplApiUrl(`team/${teamId}/${fallbackGw}`),
+            )
+            gameweek = fallbackGw
+          } catch {
+            fallbackGw--
+          }
+        }
+        if (!teamPicks) {
           throw err
         }
       }
 
-      setAppPhase({ phase: "loading", message: `Analysing ${teamPicks.picks.length} players...` })
+      setAppPhase({
+        phase: "loading",
+        message: `Analysing ${teamPicks.picks.length} players...`,
+      })
 
       const summaries = await Promise.all(
-        teamPicks.picks.map(pick =>
+        teamPicks.picks.map((pick) =>
           fetchJson<PlayerSummaryResponse>(fplApiUrl(`player/${pick.element}`)),
         ),
       )
 
-      const elementsMap = new Map(bootstrap.elements.map(el => [el.id, el]))
-      const teamsMap = new Map(bootstrap.teams.map(t => [t.id, t]))
+      const elementsMap = new Map(bootstrap.elements.map((el) => [el.id, el]))
+      const teamsMap = new Map(bootstrap.teams.map((t) => [t.id, t]))
       const nextEventId = getNextEventId(fixtures, gameweek)
 
       const enrichedPicks: EnrichedPick[] = teamPicks.picks.map((pick, i) => {
         const element = elementsMap.get(pick.element)!
         const team = teamsMap.get(element.team)!
         const summary = summaries[i]
-        const prediction = calculatePrediction({ element, summary, fixtures, nextEventId })
-        const nextFixture = resolveFixtureInfo(fixtures, element.team, nextEventId, teamsMap)
+        const prediction = calculatePrediction({
+          element,
+          summary,
+          fixtures,
+          nextEventId,
+        })
+        const nextFixture = resolveFixtureInfo(
+          fixtures,
+          element.team,
+          nextEventId,
+          teamsMap,
+        )
         return { pick, element, team, prediction, nextFixture }
       })
 
-      const startingXI = enrichedPicks.filter(ep => ep.pick.position <= 11)
-      const bench = enrichedPicks.filter(ep => ep.pick.position > 11)
+      const startingXI = enrichedPicks.filter((ep) => ep.pick.position <= 11)
+      const bench = enrichedPicks.filter((ep) => ep.pick.position > 11)
 
       const rawScore = startingXI.reduce(
         (sum, ep) => sum + ep.prediction.predictedPoints * ep.pick.multiplier,
@@ -410,7 +551,8 @@ export default function HomePage() {
     } catch (err) {
       setAppPhase({
         phase: "error",
-        message: err instanceof Error ? err.message : "Failed to load team data.",
+        message:
+          err instanceof Error ? err.message : "Failed to load team data.",
       })
     }
   }
@@ -422,10 +564,17 @@ export default function HomePage() {
   return (
     <>
       {appPhase.phase !== "loaded" && <Hero />}
-      <TeamLoader onSubmit={loadTeam} isLoading={isLoading} errorMessage={errorMessage} />
+      <TeamLoader
+        onSubmit={loadTeam}
+        isLoading={isLoading}
+        errorMessage={errorMessage}
+      />
       {isLoading && <LoadingCard message={appPhase.message} />}
       {appPhase.phase === "loaded" && (
-        <SquadView squadData={appPhase.squadData} isAuthenticated={isAuthenticated} />
+        <SquadView
+          squadData={appPhase.squadData}
+          isAuthenticated={isAuthenticated}
+        />
       )}
       {appPhase.phase === "idle" && <LandingSection />}
     </>

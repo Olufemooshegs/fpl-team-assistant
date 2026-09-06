@@ -16,7 +16,7 @@ const POSITION_COLOR: Record<number, string> = {
   4: "#DC2626",
 }
 
-function fplFdrStyle(d: number): { bg: string; text: string; label: string } {
+function fplFdrStyle(d: number): { bg: string text: string label: string } {
   if (d <= 2) return { bg: "#00FF87", text: "#00552B", label: "Easy" }
   if (d === 3) return { bg: "#E7E7E7", text: "#242424", label: "Medium" }
   if (d === 4) return { bg: "#FF005A", text: "#FFFFFF", label: "Hard" }
